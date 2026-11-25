@@ -63,11 +63,25 @@ class ProjectWorkspace extends Component
 
     public string $source = '';
 
+    #[Locked]
+    public ?string $returnTo = null;
+
+    #[Locked]
+    public bool $standaloneRecord = false;
+
     public function mount(Project $project, ?Intervention $intervention = null): void
     {
         $this->projectId = $project->id;
         $this->access();
         if ($intervention?->exists) {
+            $this->standaloneRecord = true;
+            $return = request()->query('return_to');
+            if ($return !== null) {
+                abort_unless(is_string($return) && strlen($return) <= 4000 && !preg_match('/[\x00-\x1f\x7f]/', $return), 422);
+                $parts = parse_url($return);
+                abort_unless(is_array($parts) && ($parts['path'] ?? '') === '/' && !isset($parts['host']) && !isset($parts['scheme']) && !isset($parts['fragment']), 422);
+                $this->returnTo = route('dashboard').(isset($parts['query']) ? '?'.$parts['query'] : '');
+            }
             $this->openRecord($intervention->id);
 
             return;
@@ -152,9 +166,45 @@ class ProjectWorkspace extends Component
         $this->search = '';
     }
 
+    public function restoreRecovery(array $recovery): void
+    {
+        $this->access();
+        abort_unless(auth()->user()->role === 'tecnico', 403);
+        abort_unless(strlen(json_encode($recovery)) <= 262144, 422);
+        $mode = $recovery['mode'] ?? '';
+        abort_unless(in_array($mode, ['asset', 'edit', 'intervention'], true), 422);
+        $id = isset($recovery['id']) && $recovery['id'] !== '' ? (int) $recovery['id'] : null;
+        if ($mode === 'edit') {
+            $this->openRecord($id ?? 0);
+            abort_unless($this->modal === 'edit', 409);
+        } else {
+            $this->open($mode, $id);
+        }
+        $values = $recovery['values'] ?? [];
+        foreach (['form', 'technical', 'activityData'] as $property) {
+            abort_unless(!isset($values[$property]) || is_array($values[$property]), 422);
+        }
+        $savedForm = $values['form'] ?? [];
+        if ($mode === 'asset' && !empty($savedForm['template_id'])) {
+            abort_unless($this->project()->templates()->whereKey($savedForm['template_id'])->exists(), 422);
+        }
+        if ($mode === 'edit') {
+            // Identity and maintenance type always come from the current authorized record.
+            unset($savedForm['template_id'], $savedForm['type']);
+        }
+        $this->form = array_replace($this->form, $savedForm);
+        if ($mode !== 'edit') {
+            $this->technical = $values['technical'] ?? $this->technical;
+        }
+        $this->activityData = $values['activityData'] ?? $this->activityData;
+        $this->dispatch('kardex-notice', message: 'Texto recuperado. Revisa los datos y guarda el borrador.');
+    }
+
     public function closeModal(): void
     {
-        if ($this->modal === 'edit') {
+        if ($this->returnTo && $this->modal !== '') {
+            $this->redirect($this->returnTo);
+        } elseif ($this->modal === 'edit' || ($this->standaloneRecord && $this->modal !== '')) {
             $this->redirectRoute('projects.show', ['project' => $this->projectId]);
         }
         $this->modal = '';
@@ -615,6 +665,7 @@ class ProjectWorkspace extends Component
             throw $exception;
         }
         $this->photoFiles = [];
+        $this->dispatch('kardex-saved');
         $this->done($sendToReview ? 'Kardex guardado y enviado a revisión.' : 'Equipo y Kardex guardados como borrador.', 'equipment');
     }
 
@@ -636,6 +687,7 @@ class ProjectWorkspace extends Component
             return $i;
         });
 
+        $this->dispatch('kardex-saved');
         return redirect()->route('interventions.show', $i);
     }
 
@@ -742,12 +794,17 @@ class ProjectWorkspace extends Component
             throw $exception;
         }
         if ($sendToReview) {
+            $this->dispatch('kardex-saved');
             $this->modal = '';
             $this->redirectRoute('interventions.show', ['intervention' => $this->interventionId]);
 
             return;
         }
-        $this->open('edit', $this->interventionId);
+        // Refresh persisted photos without rebuilding the editor and its open activities.
+        $this->photoFiles = [];
+        $this->incomingPhotos = [];
+        $this->resetValidation();
+        $this->dispatch('kardex-saved');
         $this->message = 'Cambios guardados.';
     }
 

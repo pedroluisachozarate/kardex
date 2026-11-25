@@ -36,66 +36,129 @@ if(templateSelect){
 const existing=document.getElementById('existing-equipment');
 if(existing){const toggle=()=>{const block=document.getElementById('new-equipment');block.hidden=Boolean(existing.value);block.querySelectorAll('input').forEach(input=>input.disabled=Boolean(existing.value));};existing.addEventListener('change',toggle);toggle();}
 
-// Upload each activity batch in one request and explicitly confirm its registration.
+// Prepare evidence on the device before sending or saving it to a local draft.
+const maxPhotoBytes = 8 * 1024 * 1024;
+async function prepareActivityPhoto(file) {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    const canvas = document.createElement('canvas');
+    try {
+        image.src = url;
+        try { await image.decode(); }
+        catch { throw new Error('No se pudo leer la imagen. Selecciona una foto JPG, PNG o WebP.'); }
+        const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+        const supported = /^image\/(jpeg|png|webp)$/.test(file.type);
+        if (supported && longestSide <= 1920 && file.size <= 300 * 1024) return file;
+
+        const scale = Math.min(1, 1920 / longestSide);
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d', {alpha: false});
+        if (!context) throw new Error('No se pudo preparar la foto.');
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const jpeg = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+        if (supported && scale === 1 && file.size <= maxPhotoBytes && (!jpeg || jpeg.size >= file.size)) return file;
+        if (!jpeg || jpeg.size > maxPhotoBytes) throw new Error('No se pudo reducir la foto a 8 MB. Selecciona otra imagen.');
+        return new File([jpeg], file.name.replace(/\.[^.]+$/, '') + '.jpg', {type: jpeg.type});
+    } finally {
+        URL.revokeObjectURL(url);
+        canvas.width = canvas.height = 0;
+    }
+}
+
+window.kardexPrepareLocalPhotos = async function(input, wire, property, remaining) {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    const emit = (name, detail = {}) => input.dispatchEvent(new CustomEvent(`livewire-upload-${name}`, {bubbles: true, detail}));
+    emit('start');
+    try {
+        if (files.length > remaining) throw new Error('Puedes agregar hasta 10 fotos por actividad.');
+        const prepared = [];
+        for (const file of files) prepared.push(await prepareActivityPhoto(file));
+        await new Promise((resolve, reject) => wire.uploadMultiple(property, prepared, resolve,
+            () => reject(new Error('No se pudieron adjuntar las fotos al borrador.')), undefined,
+            () => reject(new Error('Carga cancelada.'))));
+        emit('finish');
+    } catch (error) {
+        emit('error', {message: error.message});
+    } finally {
+        input.value = '';
+    }
+};
+
+// JSON photo transport uses the same request format as Livewire in Android.
 const activityPhotoRequests = new WeakMap();
 window.kardexCancelPhotoUpload = input => activityPhotoRequests.get(input)?.abort();
 window.kardexUploadActivityPhotos = async function(input, wire, endpoint, bucket, index) {
     const files = Array.from(input.files || []);
-    if (!files.length) return;
+    if (!files.length || activityPhotoRequests.has(input)) return;
     const emit = (name, detail = {}) => input.dispatchEvent(new CustomEvent(name, {bubbles:true, detail}));
-    const fail = message => emit('livewire-upload-error', {message});
     emit('livewire-upload-start');
-    if (files.length > 10 || files.some(file => file.size > 8 * 1024 * 1024)) {
-        fail('Selecciona hasta 10 fotos, de máximo 8 MB cada una.'); input.value = ''; return;
+    if (files.length > 10) {
+        emit('livewire-upload-error', {message:'Selecciona hasta 10 fotos.'});input.value='';return;
     }
-    const split = bucket.indexOf('_');
-    const data = new FormData();
-    data.append('template_id', bucket.slice(0, split));
-    data.append('type', bucket.slice(split + 1));
-    data.append('activity_index', index);
-    if (wire.interventionId) data.append('intervention_id', wire.interventionId);
-    files.forEach(file => data.append('files[]', file, file.name));
-    let cancelled = false;
+    let cancelled=false, completed=0, activeRequest=null, reader=null;
+    activityPhotoRequests.set(input,{abort(){cancelled=true;reader?.abort();activeRequest?.abort();}});
+    const split=bucket.indexOf('_');
     try {
-        const result = await new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            activityPhotoRequests.set(input, xhr);
-            xhr.open('POST', endpoint);
-            xhr.responseType = 'json';
-            xhr.timeout = 60000;
-            xhr.setRequestHeader('Accept', 'application/json');
-            xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').content);
-            xhr.upload.onprogress = event => { if(event.lengthComputable) emit('livewire-upload-progress', {progress:Math.round(100 * event.loaded / event.total)}); };
-            xhr.onload = () => {
-                const response = xhr.response;
-                if (xhr.status >= 200 && xhr.status < 300 && response?.token) return resolve(response);
-                const message = response?.errors ? Object.values(response.errors).flat().join(' ') :
-                    xhr.status === 419 || xhr.status === 401 ? 'La sesión venció. Vuelve a ingresar y selecciona las fotos.' :
-                    xhr.status === 403 ? 'Tu cuenta no tiene permiso para subir fotos en este proyecto.' :
-                    xhr.status === 404 || xhr.status === 405 ? 'El servidor no encuentra la ruta de carga. Actualiza la página e intenta nuevamente.' :
-                    xhr.status === 413 ? 'Las fotos superan el tamaño permitido por el servidor.' :
-                    xhr.status === 429 ? 'Se hicieron muchas cargas seguidas. Espera un minuto y vuelve a intentar.' :
-                    'El servidor no pudo recibir las fotos. Intenta nuevamente.';
-                console.warn('Kardex: carga rechazada', {status: xhr.status, path: new URL(endpoint, location.href).pathname});
-                reject(new Error(message));
-            };
-            xhr.onerror = () => reject(new Error('Se perdió la conexión al subir las fotos. Intenta nuevamente.'));
-            xhr.ontimeout = () => reject(new Error('La carga tardó demasiado. Intenta con menos fotos por selección.'));
-            xhr.onabort = () => { cancelled = true; reject(new Error('Carga cancelada.')); };
-            xhr.send(data);
-        });
-        activityPhotoRequests.delete(input);
-        let confirmationTimer;
-        const confirmation = await Promise.race([
-            wire.acceptUploadedPhotos(result.token),
-            new Promise((resolve, reject) => { confirmationTimer = setTimeout(() => reject(new Error('El servidor tardó demasiado en confirmar las fotos. Intenta nuevamente.')), 30000); })
-        ]).finally(() => clearTimeout(confirmationTimer));
-        if (!confirmation?.ok) throw new Error(confirmation?.message || 'No se pudieron confirmar las fotos. Intenta nuevamente.');
+        for (let number=0; number<files.length; number++) {
+            if(cancelled)throw new Error('Carga cancelada.');
+            const file = await prepareActivityPhoto(files[number]);
+            if (cancelled) throw new Error('Carga cancelada.');
+            const encoded=await new Promise((resolve,reject)=>{
+                reader=new FileReader();
+                reader.onload=()=>resolve(String(reader.result).split(',',2)[1]);
+                reader.onerror=()=>reject(new Error('No se pudo leer la foto. Vuelve a seleccionarla.'));
+                reader.onabort=()=>reject(new Error('Carga cancelada.'));
+                reader.readAsDataURL(file);
+            });
+            reader=null;
+            if(cancelled)throw new Error('Carga cancelada.');
+            const data={template_id:bucket.slice(0,split),type:bucket.slice(split+1),activity_index:index,
+                encoded_photo:{name:file.name,data:encoded}};
+            if(wire.interventionId)data.intervention_id=wire.interventionId;
+            const result=await new Promise((resolve,reject)=>{
+                const xhr=activeRequest=new XMLHttpRequest();
+                xhr.open('POST',endpoint);xhr.responseType='json';xhr.timeout=60000;
+                xhr.setRequestHeader('Accept','application/json');
+                xhr.setRequestHeader('Content-Type','application/json');
+                xhr.setRequestHeader('X-CSRF-TOKEN',document.querySelector('meta[name="csrf-token"]').content);
+                xhr.upload.onprogress=event=>{if(event.lengthComputable)emit('livewire-upload-progress',{progress:Math.round(100*(number+event.loaded/event.total)/files.length)});};
+                xhr.onload=()=>{
+                    const response=xhr.response;
+                    if(xhr.status>=200&&xhr.status<300&&response?.token)return resolve(response);
+                    const message=response?.errors?Object.values(response.errors).flat().join(' '):
+                        xhr.status===419||xhr.status===401?'La sesión venció. Vuelve a ingresar y selecciona las fotos.':
+                        xhr.status===403?'Tu cuenta no tiene permiso para subir fotos en este proyecto.':
+                        xhr.status===404||xhr.status===405?'El servidor no encuentra la ruta de carga. Actualiza la página e intenta nuevamente.':
+                        xhr.status===413?'La foto supera el tamaño permitido por el servidor.':
+                        xhr.status===429?'Se hicieron muchas cargas seguidas. Espera un minuto y vuelve a intentar.':
+                        'El servidor no pudo recibir la foto. Intenta nuevamente.';
+                    reject(new Error(message));
+                };
+                xhr.onerror=()=>reject(new Error('Se perdió la conexión al subir la foto. Intenta nuevamente.'));
+                xhr.ontimeout=()=>reject(new Error('La carga tardó demasiado. Intenta nuevamente.'));
+                xhr.onabort=()=>{cancelled=true;reject(new Error('Carga cancelada.'));};
+                xhr.send(JSON.stringify(data));
+            });
+            activeRequest=null;
+            let confirmationTimer;
+            const confirmation=await Promise.race([
+                wire.acceptUploadedPhotos(result.token),
+                new Promise((resolve,reject)=>{confirmationTimer=setTimeout(()=>reject(new Error('El servidor tardó demasiado en confirmar la foto.')),30000);})
+            ]).finally(()=>clearTimeout(confirmationTimer));
+            if(!confirmation?.ok)throw new Error(confirmation?.message||'No se pudo confirmar la foto. Intenta nuevamente.');
+            completed++;
+        }
         emit('livewire-upload-finish');
-    } catch (error) {
-        emit(cancelled ? 'livewire-upload-cancel' : 'livewire-upload-error', {message:error.message || 'No se pudieron cargar las fotos.'});
+    } catch(error) {
+        let message=error.message||'No se pudieron cargar las fotos.';
+        if(completed>0)message=`Se cargaron ${completed} de ${files.length} fotos. Pulsa Guardar para conservarlas y selecciona solo las restantes. ${message}`;
+        emit(cancelled?'livewire-upload-cancel':'livewire-upload-error',{message});
+        if(cancelled&&completed>0)window.dispatchEvent(new CustomEvent('kardex-notice',{detail:{message}}));
     } finally {
-        activityPhotoRequests.delete(input);
-        input.value = '';
+        activityPhotoRequests.delete(input);input.value='';
     }
 };

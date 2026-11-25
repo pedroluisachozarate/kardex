@@ -1,0 +1,313 @@
+/* Kardex form: one type scale and restrained section hierarchy, online and local. */
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet){--form-text:14px;--form-label:12px;--form-line:#e2e8f0;font-family:inherit;color:#1e293b;font-size:var(--form-text);line-height:1.5}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) label{font-size:var(--form-label);font-weight:500;color:#475569;line-height:1.4;margin:0;min-width:0}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) :is(input:not([type=file]),select,textarea){font-family:inherit;font-size:var(--form-text);font-weight:400;line-height:1.4;color:#1e293b;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:none;box-sizing:border-box;width:100%;padding:9px 10px;margin-top:5px;min-width:0;max-width:100%}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) :is(input:not([type=file]),select){height:40px;min-height:40px}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) textarea{height:80px;min-height:80px;resize:vertical}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) :is(input,select,textarea):focus-visible{outline:2px solid #059669;outline-offset:2px;border-color:#059669;box-shadow:none}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) :is(input,select):disabled{opacity:1;color:#64748b;background:#f1f5f9;border-color:#e2e8f0;-webkit-text-fill-color:#64748b}
+:is(.project-workspace .admin-modal .compact-registration,.native-local .offline-sheet) .button{font-family:inherit;font-size:13px;font-weight:500;line-height:1.4;letter-spacing:normal;text-transform:none;border-radius:8px}
+.project-workspace .admin-modal .compact-registration .sheet-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 14px;padding:0}
+.project-workspace .admin-modal .compact-registration .sheet-tools>label{max-width:none}
+.project-workspace .admin-modal .compact-registration .kardex-sheet{background:#fff;border:1px solid var(--form-line);border-radius:12px;padding:16px;box-shadow:none;color:inherit}
+.project-workspace .admin-modal .compact-registration .sheet-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;padding:0 0 16px;border-bottom:1px solid var(--form-line);flex-wrap:wrap}
+.project-workspace .admin-modal .compact-registration .sheet-heading>.sheet-title-block{display:flex;flex-direction:column;align-items:start;gap:4px;text-align:left;font-size:14px;flex:1;min-width:180px}
+.project-workspace .admin-modal .compact-registration .sheet-title-block>strong{font-size:17px;font-weight:650;color:#0f172a;line-height:1.3}
+.project-workspace .admin-modal .compact-registration .sheet-reference{font-size:12px;font-weight:400;color:#64748b;line-height:1.5}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label{display:block;font-size:12px;width:154px}
+.project-workspace .admin-modal .compact-registration .sheet-heading input{width:100%;font-size:14px}
+.project-workspace .admin-modal .compact-registration .kardex-sheet h3,.native-local .offline-sheet .offline-section-title{font-family:inherit;font-size:14px;font-weight:650;text-transform:none;letter-spacing:normal;text-align:left;color:#0f172a;background:transparent;border:0;border-bottom:1px solid var(--form-line);padding:0 0 9px;margin:20px 0 0;line-height:1.4}
+.project-workspace .admin-modal .compact-registration .sheet-project{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 0 0;background:#fff;color:#334155;font-size:14px;line-height:1.5}
+.project-workspace .admin-modal .compact-registration .sheet-project b{font-size:12px;color:#64748b;font-weight:500;display:block;margin-bottom:1px}
+.project-workspace .admin-modal .compact-registration .sheet-inputs{padding:12px 0 0;gap:14px 12px;background:#fff}
+.project-workspace .admin-modal .compact-registration .technical-inputs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.project-workspace .admin-modal .compact-registration .result-inputs{display:grid;grid-template-columns:1fr}
+.project-workspace .admin-modal .compact-registration .result-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.project-workspace .admin-modal .compact-registration .compact-activity{border:0;border-bottom:1px solid var(--form-line);margin:0}
+.project-workspace .admin-modal .compact-registration .compact-activity-main{display:grid;grid-template-columns:22px minmax(0,1fr) 140px 170px;gap:10px;align-items:center;padding:14px 0;border:0!important;background:#fff}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>strong{font-size:14px;font-weight:500;color:#1e293b;line-height:1.45}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>span{font-size:12px;font-weight:500;color:#94a3b8;align-self:start;padding-top:9px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>label{width:auto;margin:0;grid-column:auto}
+.project-workspace .admin-modal .compact-registration .compact-activity-main select{font-size:14px;height:40px;min-height:40px;margin:0;background:#fff;color:#334155;border-color:#cbd5e1}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>button{font-size:12px;font-weight:500;min-height:40px;padding:8px;justify-content:center;gap:5px;margin:0;background:#fff;border-color:#cbd5e1;color:#475569;grid-column:auto;justify-self:stretch;white-space:normal}
+.project-workspace .admin-modal .compact-registration .compact-activity-details{padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 12px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main select:has(option[value="realizado"]:checked){color:#047857;background:#f0fdf9;border-color:#a7daca}
+.project-workspace .admin-modal .compact-registration .compact-activity-main select:has(option[value="no_realizado"]:checked){color:#b45309;background:#fffbeb;border-color:#fcd699}
+.project-workspace .admin-modal:has(.compact-registration){background:#f8fafc;--editor-font:14px;border-radius:14px}
+.project-workspace .admin-modal:has(.compact-registration)>header{padding:14px 18px;background:#fff;border-bottom:1px solid #e2e8f0}
+.project-workspace .admin-modal:has(.compact-registration)>header h2{font-size:17px;font-weight:650;color:#0f172a;letter-spacing:-.2px}
+.project-workspace .admin-modal:has(.compact-registration) .close-drawer{display:grid;place-items:center;width:36px;height:36px;padding:8px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#64748b}
+.project-workspace .admin-modal:has(.compact-registration) .close-drawer:focus-visible{outline:2px solid #059669;outline-offset:2px}
+.project-workspace .admin-modal:has(.compact-registration) .drawer-body{padding:16px 18px}
+.project-workspace .admin-modal:has(.compact-registration) footer{padding:12px 18px;background:#fff;border-top:1px solid #e2e8f0;gap:8px}
+.project-workspace .admin-modal:has(.compact-registration) footer .button{font-size:13px;font-weight:500;min-height:42px;border-radius:8px;padding:9px 12px;line-height:1.35}
+.native-local .offline-sheet{padding:16px;gap:0;border:1px solid #e2e8f0;border-radius:12px;background:#fff;overflow:visible}
+.native-local .offline-sheet .offline-sheet-heading{padding:0 0 16px;border-bottom:1px solid var(--form-line);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.native-local .offline-sheet .offline-sheet-heading>strong{font-size:17px;font-weight:650;color:#0f172a}
+.native-local .offline-sheet .offline-sheet-heading small{font-size:12px;color:#64748b}
+.native-local .offline-sheet .offline-sheet-fields{padding:14px 0 0;gap:14px 12px}
+.native-local .offline-sheet .offline-sheet-fields>label{font-size:12px}
+.native-local .offline-sheet .offline-sheet-activity{padding:14px 0;border:0;border-bottom:1px solid var(--form-line);background:#fff}
+.native-local .offline-sheet .offline-sheet-activity>header{align-items:start;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.native-local .offline-sheet .offline-sheet-activity strong{font-size:14px;font-weight:500;color:#1e293b;flex:1;min-width:120px}
+.native-local .offline-sheet .offline-sheet-activity header select{width:140px;margin:0!important}
+.native-local .offline-sheet .offline-photo-control .button{font-size:12px;border-radius:8px}
+.native-local .offline-sheet .offline-sheet-footer{padding:14px 0 0;margin-top:16px;border-top:1px solid var(--form-line)}
+.native-local .offline-sheet .offline-sheet-footer .button{font-size:13px;min-height:42px;padding:9px 12px}
+@media(max-width:760px){
+.project-workspace .admin-modal:has(.compact-registration){border-radius:0}
+.project-workspace .admin-modal:has(.compact-registration)>header{padding:10px 12px}
+.project-workspace .admin-modal:has(.compact-registration) .drawer-body{padding:12px}
+.project-workspace .admin-modal .compact-registration .kardex-sheet{padding:12px}
+.project-workspace .admin-modal .compact-registration .sheet-heading{gap:12px}
+.project-workspace .admin-modal .compact-registration .sheet-heading>.sheet-title-block{min-width:100%;flex-basis:100%}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label{width:100%;max-width:180px}
+.project-workspace .admin-modal .compact-registration .sheet-title-block>strong{font-size:16px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main{grid-template-columns:20px minmax(0,1fr) minmax(0,1fr);gap:8px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>span{grid-column:1;grid-row:1;padding-top:1px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>strong{grid-column:2/4;grid-row:1}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>label{grid-column:2;grid-row:2;width:auto}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>button{grid-column:3;grid-row:2;min-width:0;line-height:1.3}
+.project-workspace .admin-modal .compact-registration .result-pair{grid-template-columns:1fr}
+.project-workspace .admin-modal:has(.compact-registration) footer{padding:10px 12px max(10px,env(safe-area-inset-bottom));gap:6px}
+.project-workspace .admin-modal:has(.compact-registration) footer>.button,.project-workspace .admin-modal:has(.compact-registration) footer .editor-footer-actions>.button{min-height:42px;font-size:12px;padding:8px;gap:5px}
+.project-workspace .admin-modal:has(.compact-registration) footer>.footer-cancel,.project-workspace .admin-modal:has(.compact-registration) footer .editor-footer-actions>.footer-pdf{flex:0 0 36px;width:36px}
+.native-local .offline-sheet{padding:12px}
+}
+
+.project-workspace .admin-modal .compact-registration .sheet-project,
+.project-workspace .admin-modal .compact-registration .sheet-inputs{border:0;box-shadow:none;margin-left:0;margin-right:0;box-sizing:border-box}
+
+
+
+/* Clear record identity, with a compact full-width date row. */
+.project-workspace .admin-modal .compact-registration .sheet-heading{display:flex;flex-direction:column;align-items:stretch;gap:12px;padding:0 0 12px}
+.project-workspace .admin-modal .compact-registration .sheet-heading>.sheet-title-block{display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0;flex-basis:auto}
+.project-workspace .admin-modal .compact-registration .sheet-record-line{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.project-workspace .admin-modal .compact-registration .sheet-title-block strong{font-size:18px;line-height:1.3;font-weight:650;color:#0f172a;letter-spacing:-.2px}
+.project-workspace .admin-modal .compact-registration .sheet-record-line .badge{font-size:11px;font-weight:500;padding:4px 9px;line-height:1.4}
+.project-workspace .admin-modal .compact-registration .sheet-reference{font-size:12px;line-height:1.5;color:#64748b}
+.project-workspace .admin-modal .compact-registration .sheet-record-number{white-space:nowrap;color:#64748b}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label{display:grid;grid-template-columns:minmax(0,1fr) 166px;align-items:center;gap:0;width:100%;max-width:none;padding:9px 0 0;border:0;border-top:1px solid #f1f5f9;background:transparent;font-size:12px;color:#64748b}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label>.required-mark{display:none}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label>.kardex-date-trigger{margin:0;height:36px;min-height:36px;padding:7px 10px}
+.native-local .offline-sheet .offline-sheet-heading{padding-bottom:12px;gap:5px 10px}
+.kardex-date-source{display:none!important}
+.kardex-date-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:40px;min-height:40px;padding:9px 10px;margin-top:5px;box-sizing:border-box;font-family:inherit;font-size:14px;font-weight:400;line-height:1.4;background:#fff;color:#1e293b;border:1px solid #cbd5e1;border-radius:8px;text-align:left}
+.kardex-date-trigger .button-icon{flex:none;width:16px;height:16px;color:#64748b}
+.kardex-date-trigger span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kardex-date-trigger:focus-visible{outline:2px solid #059669;outline-offset:2px}
+.kardex-date-panel{position:fixed!important;z-index:20000!important;margin:0!important;box-sizing:border-box;background:white;border:1px solid #cbd5e1;border-radius:10px;padding:10px;box-shadow:0 10px 30px #0f172a20;max-height:calc(100dvh - 16px);overflow:auto;font:14px/1.4 'Segoe UI',Arial,sans-serif;color:#1e293b}
+.kardex-date-panel .calendar-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.kardex-date-panel .calendar-heading strong{font-size:14px;text-transform:capitalize}
+.kardex-date-panel .calendar-heading button{width:34px;height:36px;min-height:36px;padding:5px}
+.kardex-date-panel .calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.kardex-date-panel .calendar-days>span{text-align:center;font-size:11px;color:#64748b;padding:4px 0}
+.kardex-date-panel .calendar-days>button{height:34px;min-height:34px;padding:0;border:0;border-radius:5px;background:#f8fafc;color:#334155;font:inherit;cursor:pointer}
+.kardex-date-panel .calendar-days>button:hover{background:#ecfdf5;color:#047857}
+.kardex-date-panel .calendar-days>button.selected{background:#047857;color:white;font-weight:600}
+.kardex-date-panel .calendar-days>button:disabled{color:#cbd5e1;cursor:default}
+.kardex-date-panel .calendar-clear{font-size:12px;margin-top:8px;padding:4px;color:#64748b}
+.project-workspace .admin-modal .compact-registration .kardex-date-trigger,.native-local .offline-sheet .kardex-date-trigger{font-size:14px;min-height:40px;height:40px;margin-top:5px;padding:9px 10px}
+.project-workspace .admin-modal .compact-registration .technician-date .kardex-date-trigger{margin-top:0}
+.native-local .offline-sheet .offline-photo-control>.kardex-date-trigger{margin:0}
+
+
+/* Keep record and project context small so technical fields appear first. */
+.project-workspace .admin-modal .compact-registration .sheet-heading{display:grid;grid-template-columns:minmax(0,1fr) 154px;gap:8px 12px;align-items:center;padding-bottom:10px}
+.project-workspace .admin-modal .compact-registration .sheet-heading>.sheet-title-block{display:contents}
+.project-workspace .admin-modal .compact-registration .sheet-record-line{grid-column:1/-1}
+.project-workspace .admin-modal .compact-registration .sheet-reference{grid-column:1;grid-row:2;font-size:12px;line-height:1.4}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label{grid-column:2;grid-row:2;display:block;width:auto;padding:0;border:0;font-size:0}
+.project-workspace .admin-modal .compact-registration .sheet-heading>label>.kardex-date-trigger{height:34px;min-height:34px;margin:0;padding:6px 8px;font-size:14px}
+.project-workspace .admin-modal .compact-registration .sheet-heading+.sheet-project-title{display:none}
+.project-workspace .admin-modal .compact-registration .sheet-project{gap:3px;padding:9px 0 0;font-size:14px;line-height:1.45}
+.project-workspace .admin-modal .compact-registration .sheet-project b{display:inline;margin:0 4px 0 0;font-size:14px}
+.project-workspace .admin-modal .compact-registration .sheet-project+h3{margin-top:14px}
+@media(max-width:360px){.project-workspace .admin-modal .compact-registration .sheet-heading{grid-template-columns:minmax(0,1fr) 142px;gap:7px 8px}}
+
+/* Compact result fields; users can still enlarge them when needed. */
+.project-workspace .admin-modal .compact-registration .result-inputs textarea,.native-local .offline-sheet .offline-sheet-fields textarea{height:48px;min-height:48px;padding:7px 10px}
+
+/* Dense activity rows keep status visible and reveal supporting details on demand. */
+.project-workspace .admin-modal .compact-registration .compact-activity-main{grid-template-columns:18px minmax(0,1fr) 118px 36px;gap:8px;padding:9px 0;align-items:center}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>span{grid-column:1;grid-row:1;padding:0;align-self:center}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>strong{grid-column:2;grid-row:1;font-size:14px;line-height:1.35}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>label{grid-column:3;grid-row:1;width:auto}
+.project-workspace .admin-modal .compact-registration .compact-activity-main select{height:36px;min-height:36px;padding:6px 7px;margin:0;font-size:14px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>.activity-details-toggle{grid-column:4;grid-row:1;position:relative;min-width:36px;width:36px;height:36px;min-height:36px;padding:8px;display:flex;align-items:center;justify-content:center}
+.activity-photo-count{position:absolute;top:-5px;right:-5px;min-width:15px;height:15px;display:grid;place-items:center;padding:0 3px;border-radius:8px;background:#047857;color:#fff;font-size:9px;line-height:1;box-sizing:border-box}
+.activity-note-dot{position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:#059669}
+.native-local .offline-sheet .offline-sheet-activity{padding:0}
+.native-local .offline-sheet .offline-sheet-activity>header{display:grid;grid-template-columns:18px minmax(0,1fr) 118px 36px;gap:8px;align-items:center;flex-wrap:nowrap;margin:0;padding:9px 0}
+.native-local .offline-sheet .offline-sheet-activity>header>.activity-number{font-size:12px;color:#94a3b8}
+.native-local .offline-sheet .offline-sheet-activity>header>strong{font-size:14px;min-width:0;line-height:1.35}
+.native-local .offline-sheet .offline-sheet-activity header select{width:100%;height:36px!important;min-height:36px!important;font-size:14px;padding:6px 7px;margin:0!important}
+.native-local .offline-sheet .offline-sheet-activity header>.activity-details-toggle{position:relative;width:36px;height:36px;min-height:36px;padding:8px;display:flex;align-items:center;justify-content:center}
+.native-local .offline-sheet .offline-activity-details{padding:10px;margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc}
+.native-local .offline-sheet .offline-activity-details>input{margin-top:0}
+.native-local .offline-sheet .offline-activity-details>small{font-size:10px;color:#64748b;display:block;margin-top:7px}
+@media(max-width:360px){
+.project-workspace .admin-modal .compact-registration .compact-activity-main,.native-local .offline-sheet .offline-sheet-activity>header{grid-template-columns:14px minmax(0,1fr) 110px 34px;gap:5px}
+.project-workspace .admin-modal .compact-registration .compact-activity-main>.activity-details-toggle,.native-local .offline-sheet .offline-sheet-activity header>.activity-details-toggle{width:34px;min-width:34px;padding:7px}
+}
+
+.project-workspace .admin-modal .compact-registration .compact-activity-main>strong,.native-local .offline-sheet .offline-sheet-activity>header>strong{font-weight:400}
+
+/* Read-only Kardex follows the same visual hierarchy for every status. */
+.maintenance-detail{font-family:inherit;font-size:14px;line-height:1.5;color:#1e293b}
+.maintenance-detail .detail-sheet{padding:12px;border:1px solid #e2e8f0;border-radius:12px;overflow:visible;background:#fff}
+.maintenance-detail .maintenance-detail-heading{display:flex;flex-direction:column;align-items:stretch;gap:7px;margin:0;padding:0 0 10px;border-bottom:1px solid #e2e8f0}
+.maintenance-detail .detail-record-line{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.maintenance-detail .detail-record-line h1{font-size:18px;font-weight:650;line-height:1.3;color:#0f172a;margin:0;letter-spacing:-.2px}
+.maintenance-detail .detail-header-actions{display:flex;flex-wrap:nowrap;align-items:center;gap:8px}
+.maintenance-detail .detail-header-actions .badge{font-size:11px;padding:4px 9px}
+.maintenance-detail .detail-header-actions .button{height:32px;min-height:32px;padding:6px 8px;font-size:12px;border-radius:7px}
+.maintenance-detail .detail-reference-line{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:#64748b;line-height:1.4}
+.maintenance-detail .detail-reference-line>span{min-width:0}
+.maintenance-detail .detail-reference-line>time{white-space:nowrap;flex:none;color:#475569}
+.maintenance-detail .detail-project{display:flex;flex-direction:column;gap:3px;padding:9px 0 0;font-size:14px;line-height:1.45}
+.maintenance-detail .detail-project b{font-size:14px;font-weight:500;color:#64748b;margin-right:4px}
+.maintenance-detail .detail-sheet h2{font:650 14px/1.4 'Segoe UI',Arial,sans-serif;letter-spacing:normal;text-transform:none;color:#0f172a;background:transparent;margin:16px 0 0;padding:0 0 9px;border:0;border-bottom:1px solid #e2e8f0}
+.maintenance-detail .detail-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;margin:0;padding:12px 0 0}
+.maintenance-detail .detail-fields dt{font-size:12px;line-height:1.4;font-weight:500;color:#64748b;margin:0 0 5px}
+.maintenance-detail .detail-fields dd{font-size:14px;font-weight:400;line-height:1.45;color:#1e293b;margin:0}
+.maintenance-detail .detail-results{grid-template-columns:1fr}
+.maintenance-detail .detail-activity{position:relative;padding:9px 44px 9px 0;border-bottom:1px solid #e2e8f0;min-height:54px;box-sizing:border-box}
+.maintenance-detail .detail-activity:last-child{border-bottom:0}
+.maintenance-detail .detail-activity-heading{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;min-height:36px;align-items:center}
+.maintenance-detail .detail-activity-heading>strong{font-size:14px;font-weight:400;line-height:1.35;color:#1e293b}
+.maintenance-detail .detail-activity-number{font-size:12px;color:#94a3b8}
+.maintenance-detail .detail-activity-heading>.badge{font-size:11px;line-height:1.4;white-space:nowrap;padding:4px 8px}
+.maintenance-detail .detail-activity-media>summary{position:absolute;top:9px;right:0;width:36px;height:36px;box-sizing:border-box;list-style:none;display:grid;place-items:center;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#64748b;cursor:pointer}
+.maintenance-detail .detail-activity-media>summary::-webkit-details-marker{display:none}
+.maintenance-detail .detail-activity-media>summary:focus-visible{outline:2px solid #059669;outline-offset:2px}
+.maintenance-detail .detail-activity-media>summary .button-icon{width:16px;height:16px}
+.maintenance-detail .detail-activity-support{margin:9px -44px 0 0;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px}
+.maintenance-detail .detail-activity-support>time{font-size:12px;color:#64748b;display:block}
+.maintenance-detail .detail-activity-note{font-size:14px;line-height:1.5;margin:6px 0 0;color:#334155}
+.maintenance-detail .detail-activity-note b{font-weight:500}
+.maintenance-detail .detail-photos{margin:8px 0 0;gap:7px}
+.maintenance-detail .detail-review,.maintenance-detail .detail-reopen,.maintenance-detail .detail-history{border-color:#e2e8f0;border-radius:10px;padding:12px}
+.maintenance-detail .detail-review h2{font-size:14px;font-weight:600}
+.maintenance-detail .detail-review label,.maintenance-detail .detail-reopen label{font-size:12px;font-weight:500}
+.maintenance-detail .detail-review textarea,.maintenance-detail .detail-reopen textarea{font:400 14px/1.4 'Segoe UI',Arial,sans-serif;padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;min-height:48px;height:48px}
+.maintenance-detail .detail-review-actions .button{font-size:12px;min-height:40px;border-radius:8px;padding:9px 12px}
+.maintenance-detail .detail-review-note{font-size:14px;padding:10px;border:1px solid #fed7aa;border-radius:8px;margin-top:12px}
+.maintenance-detail .detail-log{font-size:13px}
+.maintenance-detail .detail-log strong{font-weight:500}
+.project-workspace .admin-modal:has(.maintenance-view-body)>header{padding:10px 12px;background:#fff;border-bottom:1px solid #e2e8f0}
+.project-workspace .admin-modal:has(.maintenance-view-body)>header h2{font-size:17px;font-weight:650;color:#0f172a}
+.project-workspace .admin-modal:has(.maintenance-view-body) .close-drawer{display:grid;place-items:center;width:36px;height:36px;padding:8px;border:1px solid #e2e8f0;border-radius:8px;color:#64748b}
+.project-workspace .admin-modal .maintenance-view-body{background:#f8fafc;padding:12px}
+@media(min-width:1000px){.maintenance-detail .detail-fields:not(.detail-results){grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Fit evidence within the viewer instead of opening a raw image document. */
+.photo-gallery .photo-gallery-stage{flex:1 1 0;min-height:0;overflow:hidden}
+.photo-gallery .photo-gallery-stage>img{position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;margin:0;transform:none}
+.photo-gallery .photo-gallery-stage>img[hidden]{display:none}
+.photo-gallery-status{position:absolute;left:40px;right:40px;text-align:center;font-size:13px;color:#cbd5e1;pointer-events:none}
+.photo-gallery-status[hidden]{display:none}
+.photo-gallery header>div{min-width:0}.photo-gallery header strong{display:block;overflow-wrap:anywhere}
+.photo-gallery header small{display:block;font-size:11px;margin-top:3px}
+.activity-thumbnails .pending-photo>img{cursor:zoom-in}
+@media(max-width:760px){.photo-gallery[open]{position:fixed;inset:0;width:100%;max-width:100%;height:100dvh;max-height:100dvh;margin:0;border-radius:0}.photo-gallery .photo-gallery-shell{height:100%;max-height:100%;box-sizing:border-box;padding-top:var(--inset-top,env(safe-area-inset-top,0px));padding-bottom:var(--inset-bottom,env(safe-area-inset-bottom,0px))}}
+
+/* Equipment register uses the same compact rows as the period overview. */
+.equipment-register-list{border:1px solid #e2e8f0;border-radius:11px;background:#fff;overflow:hidden;max-width:100%;padding:0}
+.equipment-register-item{border-bottom:1px solid #e2e8f0;padding:0;margin:0;background:#fff}
+.equipment-register-item:last-child{border-bottom:0}
+.equipment-register-heading{display:flex;align-items:center;gap:8px;padding:10px 12px 3px}
+.equipment-register-name{flex:1;min-width:0;font-size:13px;line-height:1.4;color:#1e293b;overflow-wrap:anywhere}
+.equipment-register-name strong{font-weight:600}.equipment-register-name>span{font-weight:400}
+.equipment-register-heading .equipment-add-maintenance{display:grid;place-items:center;flex:none;width:30px;height:30px;min-height:30px;padding:6px;border-radius:7px;background:#fff;border:1px solid #cbd5e1;color:#047857}
+.equipment-register-info{padding:0 12px}
+.equipment-register-info>summary{display:flex;align-items:center;gap:5px;width:max-content;max-width:100%;list-style:none;cursor:pointer;color:#64748b;font-size:11px;line-height:1.5;padding:2px 0 7px}
+.equipment-register-info>summary::-webkit-details-marker{display:none}
+.equipment-register-info[open]>summary>span{transform:rotate(180deg)}
+.equipment-register-info dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px;margin:0 0 10px;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px}
+.equipment-register-info dt{font-size:11px;color:#64748b;margin:0 0 2px}
+.equipment-register-info dd{font-size:13px;color:#1e293b;margin:0;overflow-wrap:anywhere}
+.equipment-register-record{position:relative;border-top:1px solid #f1f5f9;margin:0}
+.equipment-record-link{display:flex;align-items:center;gap:10px;min-height:56px;padding:10px 12px;color:#1e293b;font-size:13px;line-height:1.4;text-decoration:none}
+.equipment-record-link:hover{background:#f8fafc}
+.equipment-record-label{flex:1;min-width:0;overflow-wrap:anywhere}
+.equipment-record-label>span{font-weight:400}
+.equipment-record-label>small{display:block;font-size:11px;color:#64748b;margin-top:3px;line-height:1.4}
+.equipment-record-link>.badge{flex:none;font-size:10px;white-space:nowrap;padding:4px 8px}
+.equipment-record-arrow{flex:none;color:#94a3b8;font-size:20px}
+.equipment-register-record:has(.equipment-record-options)>.equipment-record-link{padding-right:43px}
+.equipment-record-options>summary{position:absolute;right:9px;top:12px;display:grid;place-items:center;width:28px;height:30px;list-style:none;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#64748b;font-size:19px;line-height:1;cursor:pointer}
+.equipment-record-options>summary::-webkit-details-marker{display:none}
+.equipment-record-actions{display:flex;align-items:center;gap:8px;padding:0 12px 10px}
+.equipment-record-actions>.button{min-height:32px;height:32px;padding:6px 9px;font-size:11px;border-radius:6px}
+.equipment-record-actions>.maintenance-photo-button{height:32px;width:40px;flex-basis:40px}
+.equipment-register-empty{font-size:12px;color:#64748b;text-align:center;padding:16px 12px}
+.equipment-empty-delete{margin:0 12px 10px;font-size:11px;min-height:32px;padding:6px 9px}
+.project-workspace>.admin-list:has(.equipment-register-list){padding:0;border:0;background:transparent;overflow:visible}
+.project-workspace .admin-list:has(.equipment-register-list)>.compact-toolbar{border:1px solid #e2e8f0;border-radius:10px;background:#fff;padding:9px;margin-bottom:10px}
+.project-workspace .equipment-register-list{max-height:none}
+.offline-equipment-register{margin-top:8px}
+@media(min-width:1000px){.equipment-register-info dl{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:360px){.equipment-record-link{gap:6px;padding-left:10px;font-size:12px}.equipment-register-name{font-size:12px}.equipment-record-link>.badge{font-size:9px;padding:4px 6px}}
+
+/* Pagination keeps natural button widths; the disclosure icon aligns to text center. */
+.project-workspace .admin-pagination{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 0;min-height:0;border:0;background:transparent}
+.project-workspace .admin-pagination>span{font-size:11px;white-space:nowrap}
+.project-workspace .admin-pagination>div{display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:8px;min-width:0}
+.project-workspace .admin-pagination>div>span{font-size:12px;white-space:nowrap;flex:none;min-width:30px;text-align:center}
+.project-workspace .admin-pagination .button{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:auto;min-width:0;height:32px;min-height:32px;padding:6px 8px;flex:none;white-space:nowrap;font-size:11px;line-height:1.3;border-radius:7px}
+.project-workspace .admin-pagination .button .button-icon{width:14px;height:14px;flex:none}
+.equipment-register-info>summary{align-items:center;gap:5px;line-height:16px}
+.equipment-register-info>summary>.equipment-info-chevron{display:block;flex:0 0 12px;width:12px;height:12px;align-self:center;transform:none}
+.equipment-register-info[open]>summary>.equipment-info-chevron{transform:rotate(180deg)}
+
+/* Allow every equipment item on the current page to remain reachable. */
+.project-workspace .admin-list>.equipment-register-list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+
+/* Distinguish equipment identity from its maintenance records. */
+.equipment-register-item>.equipment-register-heading,.equipment-register-item>.equipment-register-info{background:#f0fdf7;border-left:3px solid #34b58b}
+.equipment-register-item>.equipment-register-heading{padding-left:9px}
+.equipment-register-item>.equipment-register-info{padding-left:9px;border-bottom:1px solid #dceee5}
+.equipment-register-heading .equipment-register-name>strong{color:#065f46}
+.equipment-register-item>.equipment-register-info>summary{color:#527368}
+
+/* Each equipment and its records form one clearly bounded group. */
+.equipment-register-list{border:0;background:transparent;border-radius:0;padding:0 2px 2px}
+.equipment-register-item{border:1px solid #dce5e0;border-radius:10px;background:#fff;overflow:hidden;margin:0 0 10px}
+.equipment-register-item:last-child{border-bottom:1px solid #dce5e0;margin-bottom:0}
+.equipment-register-item>.equipment-register-heading,.equipment-register-item>.equipment-register-info{border-left:0;background:#f0fdf7;padding-left:12px}
+.equipment-register-item>.equipment-register-records{padding-left:12px;border-left:3px solid #cce5d8;margin-left:12px}
+.equipment-register-record:first-child{border-top:0}
+.equipment-record-link{padding-left:10px}
+
+/* Continuous register: compact groups with clear dividers instead of separate cards. */
+.equipment-register-list{border:1px solid #dce5e0;border-radius:10px;background:#fff;padding:0}
+.equipment-register-item{border:0;border-bottom:2px solid #dce5e0;border-radius:0;margin:0;overflow:hidden}
+.equipment-register-item:last-child{border-bottom:0;margin-bottom:0}
+.equipment-register-item>.equipment-register-heading{padding-top:8px;padding-bottom:2px;background:#f3f7f5}
+.equipment-register-item>.equipment-register-info{background:#f3f7f5;border-bottom:1px solid #e5ece8}
+.equipment-register-info>summary{padding-bottom:5px}
+.equipment-register-item>.equipment-register-records{padding-left:0;border-left:0;margin-left:0}
+.equipment-record-link{min-height:50px;padding-top:8px;padding-bottom:8px;padding-left:20px}
+.equipment-record-options>summary{top:10px}
+
+/* Small gap between individual equipment groups. */
+.equipment-register-list{border:0;border-radius:0;background:transparent;padding:0 2px 2px}
+.equipment-register-item{border:1px solid #dce5e0;border-radius:9px;margin:0 0 4px}
+.equipment-register-item:last-child{border-bottom:1px solid #dce5e0;margin-bottom:0}
+
+/* Compact, balanced supervisor decisions. */
+.maintenance-detail .detail-review-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.maintenance-detail .detail-review-actions .button{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-width:0;min-height:38px;height:38px;padding:8px 10px;font-size:13px;font-weight:500;line-height:1.3;white-space:nowrap}
+.maintenance-detail .detail-review-actions .button .button-icon{width:16px;height:16px;flex:none}
+
+/* Technician review/resend actions match the compact supervisor controls. */
+.project-workspace .admin-modal:has(.compact-registration) footer>.button,.project-workspace .admin-modal:has(.compact-registration) footer .editor-footer-actions>.button{display:flex;align-items:center;justify-content:center;min-height:38px;height:38px;line-height:1.3;font-size:12px;font-weight:500;white-space:nowrap;padding:8px;gap:5px}
+.project-workspace .admin-modal:has(.compact-registration) footer .button-icon{width:16px;height:16px;flex:none}
+
+.activity-thumbnails{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px}
+.activity-thumbnails .pending-photo{width:auto;min-width:0;margin:4px 0 0;box-sizing:border-box}
+.activity-thumbnails .pending-photo img{width:100%;height:auto;aspect-ratio:5/4;object-fit:cover}
+.editor-footer-actions a[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+@media(max-width:760px){.activity-thumbnails{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}}

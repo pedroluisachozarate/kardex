@@ -3,14 +3,25 @@
 use App\Http\Controllers\ActivityPhotoUploadController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KardexController;
+use App\Http\Controllers\MobileAppController;
 use App\Http\Middleware\EnsureAccountReady;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/native-mobile', fn () => abort_unless(config('mobile.enabled'), 404) ?: redirect('/mobile'));
+Route::get('/mobile', [MobileAppController::class, 'start'])->name('mobile.start');
+Route::get('/mobile/bootstrap', [MobileAppController::class, 'desktopBootstrap']);
+Route::get('/mobile/drafts/{draftId}/photos/{photoId}', [MobileAppController::class, 'draftPhoto'])->name('mobile.draft-photo');
+Route::get('/mobile/offline', fn () => abort_unless(config('mobile.enabled'), 404) ?: view('mobile'))->name('mobile.workspace');
+Route::get('/mobile/signout', [MobileAppController::class, 'signout']);
+Route::get('/mobile/handoff', [MobileAppController::class, 'receive']);
+Route::get('/native/entry', [MobileAppController::class, 'entry']);
 Route::middleware('guest')->group(function () {
     Route::view('/login', 'auth.login')->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
 });
 Route::middleware(['auth', EnsureAccountReady::class])->group(function () {
+    Route::post('/desktop/offline', [MobileAppController::class, 'desktopPrepare'])->name('desktop.offline');
+    Route::post('/native/offline', [MobileAppController::class, 'prepare'])->name('native.offline');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::view('/password', 'auth.password')->name('password.edit');
     Route::post('/password', [AuthController::class, 'password'])->name('password.update')->middleware('throttle:6,1');

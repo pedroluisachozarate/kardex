@@ -31,3 +31,5 @@ Thumbs.db
 *.sqlite*
 *.pem
 
+
+/native-build/

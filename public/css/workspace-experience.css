@@ -1,0 +1,23 @@
+body[data-workspace-user]{overscroll-behavior-y:contain}
+#workspace-notice{position:fixed;top:calc(66px + var(--inset-top,0px));left:50%;transform:translateX(-50%);z-index:10000;max-width:calc(100vw - 24px);width:max-content;padding:10px 14px;border:1px solid #d1fae5;border-radius:10px;background:#f0fdf7;color:#065f46;font-size:12px;box-shadow:0 5px 18px #0f172a15;pointer-events:none}
+#workspace-notice[hidden],.workspace-pull[hidden]{display:none}
+.workspace-network{font-size:11px;text-align:left;color:#64748b;margin:8px 0;padding:8px 10px}
+.workspace-sync-status{font-size:10px;color:#64748b;margin:0 0 8px;line-height:1.5}.workspace-sync-status small{display:block;font-size:10px}
+.workspace-recovery-banner{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;margin-bottom:8px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:11px;color:#78350f;flex:none}
+.workspace-recovery-banner span{flex:1;min-width:150px}.workspace-recovery-banner .text-button{font-size:11px;padding:4px;color:#065f46}
+.workspace-recovery-status{font-size:10px;color:#64748b;margin:0;padding:7px 12px;border-bottom:1px solid #e2e8f0;line-height:1.4}
+
+.workspace-sync-status{display:flex;gap:2px 8px;flex-wrap:wrap}.workspace-sync-status small{display:inline}
+
+.workspace-pull{position:fixed;top:70px;left:50%;z-index:9999;width:36px;height:36px;display:grid;place-items:center;pointer-events:none;opacity:var(--pull-progress,1);transform:translateX(-50%);color:#047857}
+.workspace-pull-letter{font-size:16px;font-weight:800;line-height:1}
+.workspace-pull-ring{position:absolute;inset:0;border:2px solid #d1fae5;border-top-color:#059669;border-right-color:#059669;border-radius:50%;transform:rotate(calc(240deg * var(--pull-progress,1)))}
+.workspace-pull.is-ready .workspace-pull-ring{border-left-color:#059669}
+.workspace-pull.is-loading{opacity:1}
+.workspace-pull.is-loading .workspace-pull-ring{animation:workspace-pull-spin .8s linear infinite}
+@keyframes workspace-pull-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.workspace-pull.is-loading .workspace-pull-ring{animation:none}}
+
+#workspace-notice.has-action{pointer-events:auto}#workspace-notice a{color:inherit;font-weight:600;text-decoration:underline;margin-left:5px}
+
+.workspace-recovery-status:empty{display:none}

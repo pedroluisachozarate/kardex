@@ -22,7 +22,7 @@ $router = Join-Path $projectRoot 'vendor\laravel\framework\src\Illuminate\Founda
 
 Push-Location (Join-Path $projectRoot 'public')
 try {
-    & $phpCommand -d "upload_tmp_dir=$uploadDirectory" -d zlib.output_compression=1 -d display_errors=0 -d log_errors=1 -d upload_max_filesize=8M -d post_max_size=96M -S "${BindAddress}:$Port" $router
+    & $phpCommand -d "upload_tmp_dir=$uploadDirectory" -d display_errors=0 -d log_errors=1 -d upload_max_filesize=8M -d post_max_size=96M -S "${BindAddress}:$Port" $router
 } finally {
     Pop-Location
 }

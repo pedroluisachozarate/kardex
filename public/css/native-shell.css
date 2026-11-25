@@ -1,0 +1,6 @@
+/* Only loaded when the session was opened by the Android app. */
+body{padding-top:var(--inset-top,0px);padding-bottom:var(--inset-bottom,0px)}
+@media(max-width:760px){.mobile-appbar{top:var(--inset-top,0px)}.sidebar{top:var(--inset-top,0px);height:calc(100dvh - var(--inset-top,0px) - var(--inset-bottom,0px))}}
+.native-offline-tools{display:grid;gap:8px;margin:12px 0}.native-offline-tools .button{width:100%;justify-content:flex-start;font-size:13px}.native-offline-tools small{display:block;padding:0 12px}
+
+.admin-overlay{padding-top:var(--inset-top,0px);padding-bottom:var(--inset-bottom,0px)}.admin-modal{max-height:calc(100dvh - var(--inset-top,0px) - var(--inset-bottom,0px) - 16px)}

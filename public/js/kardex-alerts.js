@@ -2,11 +2,21 @@
 (() => {
     const shown = new WeakMap();
     const approved = new WeakSet();
-    const dialog = options => Swal.fire({
+    const notify = detail => {
+        if(window.kardexExperience?.notice)window.kardexExperience.notice(detail.message,detail);
+        else (window.kardexPendingNotices ||= []).push(detail);
+    };
+    const dialog = options => {
+        if(options.icon==='success') {
+            notify({message:options.text || options.title || 'Cambios guardados.',duration:1500});
+            return Promise.resolve({isConfirmed:false});
+        }
+        return Swal.fire({
         confirmButtonText: 'Aceptar', cancelButtonText: 'Cancelar',
         confirmButtonColor: '#16745f', cancelButtonColor: '#657680',
         heightAuto: false, ...options,
-    });
+        });
+    };
     window.kardexAlert = dialog;
     const scan = () => {
         document.querySelectorAll('[data-kardex-alert]').forEach(node => {
@@ -17,16 +27,20 @@
             if (!text || shown.get(node) === text) return;
             shown.set(node, text);
             const success = node.dataset.kardexAlert === 'success';
+            if (success) window.dispatchEvent(new CustomEvent('kardex-operation-saved'));
             const link = node.querySelector('a');
             node.hidden = true;
-            dialog({icon: success ? 'success' : 'error', title: success ? 'Listo' : 'Revisa los datos', text,
-                ...(success && !link ? {toast:true, position:'top-end', timer:3500, timerProgressBar:true, showConfirmButton:false} : {}),
-                ...(link ? {showCancelButton:true, confirmButtonText:link.textContent.trim(), cancelButtonText:'Cerrar'} : {}),
-            }).then(result => { if (link && result.isConfirmed) window.location.assign(link.href); });
+            if(success) {
+                notify({message:text,duration:1500,...(link ? {link:{href:link.href,text:link.textContent.trim()}} : {})});
+                return;
+            }
+            dialog({icon:'error',title:'Revisa los datos',text,
+                ...(link ? {showCancelButton:true,confirmButtonText:link.textContent.trim(),cancelButtonText:'Cerrar'} : {}),
+            }).then(result=>{if(link && result.isConfirmed)window.location.assign(link.href);});
         });
     };
     window.addEventListener('offline', () => {
-        dialog({icon:'error', title:'Sin conexión', text:'Comprueba tu conexión y vuelve a intentarlo.'});
+        window.dispatchEvent(new CustomEvent('kardex-notice', {detail:{message:'Sin conexión. Conservamos los cambios en pantalla.'}}));
     });
     document.addEventListener('click', async event => {
         const button = event.target.closest('[data-confirm]');

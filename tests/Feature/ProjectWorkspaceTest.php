@@ -28,6 +28,25 @@ class ProjectWorkspaceTest extends TestCase
         return User::factory()->create(['role' => $role, 'active' => true, 'must_change_password' => false]);
     }
 
+    public function test_record_close_returns_to_filtered_dashboard_for_edit_and_read_only_records(): void
+    {
+        $project = $this->project();
+        $template = $project->templates()->create(['name' => 'Cámara', 'fields' => [], 'preventive' => [], 'corrective' => []]);
+        $asset = $project->assets()->create(['template_id' => $template->id, 'equipment_id' => Equipment::create(['name' => 'Cámara'])->id, 'number' => 1, 'technical_data' => []]);
+        $tech = $this->account('tecnico');
+        $project->users()->attach($tech);
+        $this->actingAs($tech);
+        $record = $asset->interventions()->create(['number' => 1, 'date' => '2026-11-21', 'type' => 'preventivo', 'status' => 'borrador', 'created_by' => $tech->id]);
+        $origin = '/?'.http_build_query(['from' => '2026-10-17', 'to' => '2026-11-23', 'view' => 'maintenance', 'state' => 'borrador', 'page' => 2]);
+        foreach (['borrador' => 'edit', 'revision' => 'view'] as $status => $modal) {
+            $record->update(['status' => $status]);
+            Livewire::withQueryParams(['return_to' => $origin])->test(ProjectWorkspace::class, ['project' => $project, 'intervention' => $record])
+                ->assertSet('modal', $modal)->call('closeModal')->assertRedirect(url($origin));
+        }
+        Livewire::withQueryParams([])->test(ProjectWorkspace::class, ['project' => $project, 'intervention' => $record])->call('closeModal')->assertRedirect(route('projects.show', $project));
+        Livewire::withQueryParams(['return_to' => 'https://example.com/'])->test(ProjectWorkspace::class, ['project' => $project, 'intervention' => $record])->assertStatus(422);
+    }
+
     public function test_equipment_type_is_locked_once_a_kardex_exists_even_if_editor_was_open(): void
     {
         $project = $this->project();
@@ -359,6 +378,50 @@ class ProjectWorkspaceTest extends TestCase
         $p->users()->attach($otherTech);
         $this->actingAs($otherTech);
         Livewire::test(ProjectWorkspace::class, ['project' => $p])->call('open', 'asset')->call('acceptUploadedPhotos', $token)->assertForbidden();
+    }
+
+    public function test_json_photo_transport_confirms_and_saves_a_correction_photo(): void
+    {
+        Storage::fake('local');
+        Storage::fake('tmp-for-tests');
+        $p = $this->project();
+        $t = $p->templates()->create(['name' => 'Aire', 'fields' => [], 'preventive' => ['Limpieza'], 'corrective' => []]);
+        $tech = $this->account('tecnico');
+        $p->users()->attach($tech);
+        $this->actingAs($tech);
+        Livewire::test(ProjectWorkspace::class, ['project' => $p])->call('open', 'asset')->call('saveAsset')->assertHasNoErrors();
+        $i = Intervention::firstOrFail();
+        $i->update(['status' => 'observado', 'review_note' => 'Adjuntar evidencia']);
+        $png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+        $data = ['template_id' => $t->id, 'type' => 'preventivo', 'activity_index' => 0, 'intervention_id' => $i->id,
+            'encoded_photo' => ['name' => 'evidencia.png', 'data' => $png]];
+        $upload = $this->postJson(route('projects.photo-upload', $p), $data)->assertOk()->assertJsonStructure(['token']);
+        $c = Livewire::test(ProjectWorkspace::class, ['project' => $p, 'intervention' => $i]);
+        $c->call('acceptUploadedPhotos', $upload->json('token'))->assertReturned(['ok' => true]);
+        $this->assertCount(1, $c->get('photoFiles')[$t->id.'_preventivo'][0]);
+        $c->call('saveEditedIntervention')->assertHasNoErrors();
+        $this->assertSame('observado', $i->fresh()->status);
+        $photo = $i->activities()->firstOrFail()->photos()->firstOrFail();
+        Storage::disk('local')->assertExists($photo->path);
+        $this->assertSame(1, getimagesizefromstring(Storage::disk('local')->get($photo->path))[0]);
+        $i->update(['status' => 'revision']);
+        $this->postJson(route('projects.photo-upload', $p), $data)->assertConflict();
+    }
+
+    public function test_json_photo_transport_validates_bytes_and_project_access(): void
+    {
+        $p = $this->project();
+        $t = $p->templates()->create(['name' => 'Aire', 'fields' => [], 'preventive' => ['Limpieza'], 'corrective' => []]);
+        $tech = $this->account('tecnico');
+        $data = ['template_id' => $t->id, 'type' => 'preventivo', 'activity_index' => 0,
+            'encoded_photo' => ['name' => 'imagen.png', 'data' => 'not-valid-base64!!']];
+        $this->actingAs($tech)->postJson(route('projects.photo-upload', $p), $data)->assertForbidden();
+        $p->users()->attach($tech);
+        $this->postJson(route('projects.photo-upload', $p), $data)->assertUnprocessable()->assertJsonValidationErrors('files.0');
+        $data['encoded_photo']['data'] = base64_encode('This is not an image');
+        $this->postJson(route('projects.photo-upload', $p), $data)->assertUnprocessable()->assertJsonValidationErrors('files.0');
+        $data['encoded_photo']['data'] = str_repeat('A', 11184813);
+        $this->postJson(route('projects.photo-upload', $p), $data)->assertUnprocessable()->assertJsonValidationErrors('encoded_photo.data');
     }
 
     public function test_photo_upload_rejects_invalid_files_and_unassigned_users(): void

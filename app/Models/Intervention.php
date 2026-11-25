@@ -29,6 +29,9 @@ class Intervention extends Model
 
     public function reviewValidationMessage(): ?string
     {
+        if ($this->mobile_uuid && ! $this->mobile_sync_complete) {
+            return 'Espera a que el celular termine de sincronizar el Kardex y sus fotos.';
+        }
         if (! $this->activities()->exists() || $this->activities()->where('result', 'pendiente')->exists()) {
             return 'Completa el resultado de todas las actividades antes de enviar a revisión.';
         }

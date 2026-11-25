@@ -84,7 +84,17 @@ class KardexController extends Controller
             'project_id' => ['nullable', Rule::in($projects->pluck('id')->all())],
             'client_id' => ['nullable', Rule::in($projects->pluck('client_id')->all())],
             'technician_id' => 'nullable|integer',
+            'view' => ['nullable', Rule::in(['overview', 'projects', 'maintenance'])],
+            'state' => ['nullable', Rule::in(['borrador', 'observado', 'revision', 'finalizado'])],
             'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from',
+            'parent' => 'nullable|string|max:6000',
+            'overview' => 'nullable|array:from,to,client_id,project_id,technician_id',
+            'overview.from' => 'nullable|date_format:Y-m-d',
+            'overview.to' => 'nullable|date_format:Y-m-d|after_or_equal:overview.from',
+            'overview.project_id' => ['nullable', Rule::in($projects->pluck('id')->all())],
+            'overview.client_id' => ['nullable', Rule::in($projects->pluck('client_id')->all())],
+            'overview.technician_id' => 'nullable|integer',
+
         ]);
         $base = Intervention::whereHas('asset', fn ($q) => $q->whereIn('project_id', $projects->pluck('id')));
         if ($role === 'tecnico') {
@@ -113,24 +123,93 @@ class KardexController extends Controller
                 throw ValidationException::withMessages(['from' => 'Selecciona un día con Kardex para estos filtros.']);
             }
         }
-        $interventions = (clone $base)->with('asset.equipment', 'asset.project.client', 'activities')->whereDate('date', '>=', $from)->whereDate('date', '<=', $to)->orderByDesc('date')->orderByDesc('id')->get();
-        $summary = $interventions->groupBy(fn ($i) => $i->asset->project_id)->map(function ($items) {
-            return ['project' => $items->first()->asset->project, 'equipment' => $items->pluck('asset.equipment_id')->unique()->count(),
-                'total' => $items->count(), 'borrador' => $items->where('status', 'borrador')->count(),
-                'revision' => $items->where('status', 'revision')->count(), 'observado' => $items->where('status', 'observado')->count(),
-                'finalizado' => $items->where('status', 'finalizado')->count()];
+        $period = (clone $base)->whereDate('date', '>=', $from)->whereDate('date', '<=', $to);
+        $counts = (clone $period)->selectRaw('status, COUNT(*) AS amount')->groupBy('status')->pluck('amount', 'status');
+        $totalCount = (int) $counts->sum();
+        $equipmentCount = (clone $period)->distinct()->count('project_equipment_id');
+        $section = $data['view'] ?? 'overview';
+        $filters = array_filter(array_merge(\Illuminate\Support\Arr::only($data, ['client_id', 'project_id', 'technician_id']), ['from' => $from, 'to' => $to]), fn ($value) => filled($value));
+        $overviewFilters = $section === 'overview' ? $filters : ($data['overview'] ?? $filters);
+        $filters['overview'] = $overviewFilters;
+        $backUrl = route('dashboard', $overviewFilters);
+        $backLabel = 'Volver al resumen';
+        if (!empty($data['parent']) && $section !== 'overview') {
+            $parent = parse_url($data['parent']);
+            abort_unless(is_array($parent) && ($parent['path'] ?? '') === '/' && !isset($parent['host']) && !isset($parent['scheme']) && !isset($parent['fragment']) && !preg_match('/[\x00-\x1f\x7f]/', $data['parent']), 422);
+            $backUrl = route('dashboard').(isset($parent['query']) ? '?'.$parent['query'] : '');
+            parse_str($parent['query'] ?? '', $parentQuery);
+            $backLabel = ($parentQuery['view'] ?? '') === 'projects' ? 'Volver a proyectos del período' : 'Volver al resumen';
+            $filters['parent'] = $data['parent'];
+        }
+
+        $priorityStates = in_array($role, ['admin', 'supervisor']) ? ['revision', 'observado', 'borrador'] : ['observado', 'borrador'];
+        $attentionCount = (int) collect($priorityStates)->sum(fn ($state) => $counts[$state] ?? 0);
+
+        // Aggregate project counts in SQL; never download every maintenance or its activities for the overview.
+        $projectRows = (clone $period)->join('project_equipment', 'project_equipment.id', '=', 'interventions.project_equipment_id')
+            ->selectRaw('project_equipment.project_id, COUNT(*) AS total, COUNT(DISTINCT project_equipment_id) AS equipment')
+            ->groupBy('project_equipment.project_id');
+        foreach (['borrador', 'revision', 'observado', 'finalizado'] as $state) {
+            $projectRows->selectRaw("SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) AS $state", [$state]);
+        }
+        foreach ($priorityStates as $state) {
+            $projectRows->orderByDesc($state);
+        }
+        $projectRows->orderByDesc('total')->orderBy('project_equipment.project_id');
+        $projectCount = (clone $period)->join('project_equipment', 'project_equipment.id', '=', 'interventions.project_equipment_id')->distinct()->count('project_equipment.project_id');
+        $projectPagination = $section === 'projects' ? $projectRows->paginate(15)->withQueryString() : null;
+        $rows = $projectPagination ? $projectPagination->getCollection() : ($section === 'overview' ? $projectRows->limit(5)->get() : collect());
+        $projectMap = $projects->keyBy('id');
+        $summary = $rows->map(function ($row) use ($projectMap) {
+            $result = ['project' => $projectMap[$row->project_id]];
+            foreach (['equipment', 'total', 'borrador', 'revision', 'observado', 'finalizado'] as $key) {
+                $result[$key] = (int) $row->$key;
+            }
+            return $result;
         });
-        $equipmentCount = $interventions->pluck('asset.equipment_id')->unique()->count();
+
+        $maintenance = (clone $period)->select(['interventions.id', 'interventions.project_equipment_id', 'interventions.number', 'interventions.date', 'interventions.status', 'interventions.type', 'interventions.created_by'])
+            ->with(['asset:id,project_id,equipment_id,number', 'asset.equipment:id,name', 'asset.project:id,name,code']);
+        $maintenancePagination = null;
+        if ($section === 'maintenance') {
+            if (filled($data['state'] ?? null)) {
+                $maintenance->where('status', $data['state']);
+            }
+            $maintenancePagination = $maintenance->orderByDesc('date')->orderByDesc('id')->paginate(15)->withQueryString();
+            $interventions = $maintenancePagination->getCollection();
+        } elseif ($section === 'overview') {
+            $maintenance->whereIn('status', $priorityStates);
+            $cases = collect($priorityStates)->map(fn ($state, $index) => "WHEN '$state' THEN $index")->implode(' ');
+            $interventions = $maintenance->orderByRaw("CASE status $cases ELSE 9 END")->orderBy('date')->orderBy('id')->limit(5)->get();
+        } else {
+            $interventions = collect();
+        }
         $clients = $projects->pluck('client')->unique('id')->sortBy('name');
 
-        return view('dashboard', compact('projects', 'interventions', 'summary', 'equipmentCount', 'availableDates', 'technicians', 'clients', 'from', 'to', 'today', 'role'));
+        return view('dashboard', compact('projects', 'interventions', 'summary', 'equipmentCount', 'availableDates', 'technicians', 'clients', 'from', 'to', 'today', 'role', 'counts', 'totalCount', 'attentionCount', 'section', 'filters', 'overviewFilters', 'backUrl', 'backLabel', 'projectCount', 'projectPagination', 'maintenancePagination'));
     }
 
-    public function projects()
+    public function projects(Request $request)
     {
-        $projects = $this->projectQuery()->orderBy('name')->get();
+        $data = $request->validate(['q' => 'nullable|string|max:120']);
+        $search = trim($data['q'] ?? '');
+        $query = $this->projectQuery();
+        if ($search !== '') {
+            $query->where(fn ($q) => $q->where('name', 'like', '%'.$search.'%')
+                ->orWhereHas('client', fn ($client) => $client->where('name', 'like', '%'.$search.'%')));
+        }
+        $projects = $query->withCount('assets')->orderBy('name')->orderBy('id')->paginate(15)->withQueryString();
+        // Counts cover every date and team member, but only projects on this authorized page.
+        $pendingCounts = DB::table('interventions')->join('project_equipment', 'project_equipment.id', '=', 'interventions.project_equipment_id')
+            ->whereIn('project_equipment.project_id', $projects->pluck('id'))
+            ->select('project_equipment.project_id')
+            ->selectRaw("COUNT(*) AS total, SUM(CASE WHEN interventions.status = 'finalizado' THEN 1 ELSE 0 END) AS finalizado")
+            ->selectRaw("SUM(CASE WHEN interventions.status = 'observado' THEN 1 ELSE 0 END) AS observado")
+            ->selectRaw("SUM(CASE WHEN interventions.status = 'borrador' THEN 1 ELSE 0 END) AS borrador")
+            ->selectRaw("SUM(CASE WHEN interventions.status = 'revision' THEN 1 ELSE 0 END) AS revision")
+            ->groupBy('project_equipment.project_id')->get()->keyBy('project_id');
 
-        return view('projects', compact('projects'));
+        return view('projects', compact('projects', 'pendingCounts', 'search'));
     }
 
     public function administration()
