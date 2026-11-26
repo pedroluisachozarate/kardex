@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use RuntimeException;
 
 class DemoAdminSeeder extends Seeder
 {
@@ -18,15 +17,10 @@ class DemoAdminSeeder extends Seeder
             return;
         }
 
-        $password = $this->command->secret('Contraseña temporal del administrador');
-        if (! is_string($password) || strlen($password) < 8) {
-            throw new RuntimeException('La contraseña temporal debe tener al menos 8 caracteres.');
-        }
-
         User::create([
             'name' => 'Administrador',
             'email' => $email,
-            'password' => $password,
+            'password' => '$2y$12$z2hBj9lqu2sMH7opdnGsBeN989JSR68kmFOdXEolRcrgS8n/MdeZ6',
             'role' => 'admin',
             'active' => true,
             'must_change_password' => true,
