@@ -61,8 +61,6 @@ class ProjectWorkspace extends Component
 
     public array $members = [];
 
-    public string $source = '';
-
     #[Locked]
     public ?string $returnTo = null;
 
@@ -73,6 +71,9 @@ class ProjectWorkspace extends Component
     {
         $this->projectId = $project->id;
         $this->access();
+        if (auth()->user()->role === 'admin') {
+            $this->section = 'types';
+        }
         if ($intervention?->exists) {
             $this->standaloneRecord = true;
             $return = request()->query('return_to');
@@ -85,9 +86,6 @@ class ProjectWorkspace extends Component
             $this->openRecord($intervention->id);
 
             return;
-        }
-        if (auth()->user()->role === 'admin' && ! $project->templates()->exists()) {
-            $this->section = 'types';
         }
     }
 
@@ -161,6 +159,7 @@ class ProjectWorkspace extends Component
     public function selectSection(string $section): void
     {
         $this->access($section !== 'equipment');
+        abort_if($section === 'equipment' && auth()->user()->role === 'admin', 403);
         abort_unless(in_array($section, ['types', 'equipment', 'members']), 404);
         $this->section = $section;
         $this->search = '';
@@ -229,7 +228,7 @@ class ProjectWorkspace extends Component
     public function open(string $modal, ?int $id = null): void
     {
         $this->access(! in_array($modal, ['asset', 'intervention', 'edit', 'view']));
-        abort_unless(in_array($modal, ['type', 'copy', 'asset', 'members', 'intervention', 'edit', 'view']), 404);
+        abort_unless(in_array($modal, ['type', 'preview-type', 'asset', 'members', 'intervention', 'edit', 'view']), 404);
         if ($modal === 'asset') {
             abort_unless(auth()->user()->role === 'tecnico', 403);
         }
@@ -242,7 +241,6 @@ class ProjectWorkspace extends Component
         if ($modal === 'view') {
             $this->viewedIntervention();
         }
-        $this->source = '';
         $this->fields = [];
         $this->technical = [];
         $this->activityData = [];
@@ -250,6 +248,9 @@ class ProjectWorkspace extends Component
         $this->incomingPhotos = [];
         $this->templateActivities = ['preventive' => [], 'corrective' => []];
         $this->form = ['name' => '', 'preventive' => '', 'corrective' => '', 'template_id' => '', 'equipment_id' => '', 'brand' => '', 'model' => '', 'serial' => '', 'code' => '', 'type' => 'preventivo', 'date' => now()->toDateString()];
+        if ($modal === 'preview-type') {
+            $this->project()->templates()->findOrFail($id);
+        }
         if ($modal === 'type' && $id) {
             $t = $this->project()->templates()->findOrFail($id);
             abort_if($t->fullyLocked(), 409, 'Este tipo de equipo ya tiene Kardex y no se puede editar.');
@@ -535,17 +536,6 @@ class ProjectWorkspace extends Component
         });
         $this->audit('Tipo de equipo guardado');
         $this->done('Tipo de equipo guardado.', 'types');
-    }
-
-    public function copyType(): void
-    {
-        $this->access(true);
-        abort_unless($this->modal === 'copy', 403);
-        $this->validate(['source' => ['required', Rule::exists('templates', 'id')->where(fn ($q) => $q->where('project_id', '!=', $this->projectId))]]);
-        $t = Template::findOrFail($this->source);
-        $this->project()->templates()->create($t->only('name', 'fields', 'preventive', 'corrective'));
-        $this->audit('Tipo de equipo copiado');
-        $this->done('Tipo copiado al proyecto.', 'types');
     }
 
     public function saveMembers(): void
@@ -862,6 +852,7 @@ class ProjectWorkspace extends Component
     public function render()
     {
         $this->access($this->section !== 'equipment');
+        abort_if($this->section === 'equipment' && auth()->user()->role === 'admin', 403);
         $project = $this->project()->load('client', 'templates', 'users');
         abort_unless(count($this->statusFilters) <= 4 && ! array_diff($this->statusFilters, ['borrador', 'observado', 'revision', 'finalizado']), 422);
         $states = array_values(array_unique($this->statusFilters));
@@ -879,7 +870,7 @@ class ProjectWorkspace extends Component
             $selectedType = $this->editorTemplate($editingIntervention);
         }
 
-        return view('livewire.project-workspace', ['project' => $project, 'assets' => $assets, 'isAdmin' => $isAdmin, 'canRegister' => auth()->user()->role === 'tecnico', 'equipment' => auth()->user()->role === 'tecnico' ? $this->availableEquipment()->get() : collect(), 'users' => $isAdmin ? User::orderBy('name')->get() : collect(), 'otherTypes' => $isAdmin ? Template::where('project_id', '!=', $this->projectId)->get() : collect(), 'designerType' => $this->modal === 'type' && $this->editing ? $project->templates->find($this->editing) : null, 'selectedType' => $selectedType, 'editingIntervention' => $editingIntervention, 'viewedIntervention' => $this->modal === 'view' ? $this->viewedIntervention() : null]);
+        return view('livewire.project-workspace', ['project' => $project, 'assets' => $assets, 'isAdmin' => $isAdmin, 'canRegister' => auth()->user()->role === 'tecnico', 'equipment' => auth()->user()->role === 'tecnico' ? $this->availableEquipment()->get() : collect(), 'users' => $isAdmin ? User::orderBy('name')->get() : collect(), 'designerType' => in_array($this->modal, ['type', 'preview-type']) && $this->editing ? $project->templates->find($this->editing) : null, 'selectedType' => $selectedType, 'editingIntervention' => $editingIntervention, 'viewedIntervention' => $this->modal === 'view' ? $this->viewedIntervention() : null]);
     }
 
     private function identityField(string $name): ?string

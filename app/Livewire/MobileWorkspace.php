@@ -171,7 +171,9 @@ class MobileWorkspace extends Component
         abort_unless(preg_match('#^/(?:proyectos(?:/[0-9]+)?|intervenciones/[0-9]+(?:/imprimir)?|administracion|password)?$#', $path), 404);
         $this->checkConnection();
         if (! $this->serverAvailable) {
-            $this->dispatch('mobile-toast', message: 'No se pudo conectar con tu PC. Puedes seguir trabajando aquí.');
+            $this->dispatch('mobile-toast', message: session('mobile.owner')
+                ? 'No se pudo conectar con el servidor. Puedes seguir trabajando aquí.'
+                : 'Sin acceso al servidor. Conéctate a internet e inténtalo de nuevo.');
             return;
         }
         $this->redirect(route('mobile.start', ['path' => $path]));

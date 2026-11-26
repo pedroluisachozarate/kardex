@@ -1,6 +1,16 @@
 <div data-mobile-workspace data-recovery-scope="local-{{ $owner }}" x-data="{mobileMenu:false,toast:''}" x-on:mobile-toast.window="toast=$event.detail.message;setTimeout(()=>toast='',5000)" x-init="setTimeout(() => $wire.checkConnection(),1800)" @online.window="$wire.checkConnection()" @offline.window="$wire.serverAvailable=false" wire:poll.30s="syncAll" @keydown.escape.window="mobileMenu=false">
 <div class="mobile-toast" role="status" x-cloak x-show="toast" x-text="toast"></div>
 @php($labels=['borrador'=>'Borradores','revision'=>'En revisión','observado'=>'Observados','finalizado'=>'Finalizados'])
+@if(!$owner)
+<header class="mobile-appbar"><span class="brand"><span class="brand-icon">K</span>Kardex</span></header>
+<main class="main">
+    <section class="card">
+        <h1>Se necesita conexión a internet</h1>
+        <p>Administradores y supervisores necesitan conexión a internet para usar Kardex. El trabajo sin conexión está disponible para técnicos que ya descargaron sus proyectos.</p>
+        <button type="button" class="button" wire:click="openSystem" wire:loading.attr="disabled" wire:target="openSystem">Reintentar conexión</button>
+    </section>
+</main>
+@else
 <header class="mobile-appbar"><a class="brand" href="{{ route('mobile.start') }}" wire:click.prevent="openSystem"><span class="brand-icon">K</span>Kardex</a><button type="button" class="menu-toggle" aria-label="Abrir menú" @click="mobileMenu=!mobileMenu"><x-icon name="menu"/>Menú</button></header>
 <button x-cloak x-show="mobileMenu" class="nav-scrim" @click="mobileMenu=false" aria-label="Cerrar menú"></button>
 <aside class="sidebar" :class="{'is-open':mobileMenu}" x-trap.inert.noscroll="mobileMenu"><button class="mobile-nav-close" @click="mobileMenu=false" aria-label="Cerrar menú"><x-icon name="close"/></button><a class="brand" href="{{ route('mobile.start') }}" wire:click.prevent="openSystem"><span class="brand-icon">K</span>kardex<span class="brand-dot">.</span></a><p class="nav-caption">GESTIÓN DE MANTENIMIENTO</p><nav @click="mobileMenu=false"><a href="{{ route('mobile.start') }}" wire:click.prevent="openSystem"><x-icon name="login"/> Sistema completo</a>@foreach(['summary'=>'Resumen descargado','projects'=>'Mis proyectos','drafts'=>'Borradores del celular'] as $tab=>$label)<a href="#" class="{{ $page===$tab?'active':'' }}" wire:click.prevent="navigate('{{ $tab }}')">{{ $label }}</a>@endforeach</nav><div class="account"><span class="avatar">{{ mb_substr(session('mobile.user.name','K'),0,1) }}</span><div><strong>{{ session('mobile.user.name','Kardex') }}</strong><small>Copia del celular</small></div></div></aside>
@@ -14,9 +24,7 @@
 @if($message && !\Illuminate\Support\Str::startsWith($message, ['Borrador guardado', 'Borrador y fotos sincronizados']) && !($page==='summary' && $owner && !$editing && !session('mobile_error')))<div class="offline-message" role="status">{{ $message }}</div>@endif
 @if($owner && !$editing)<div class="workspace-sync-status" role="status"><span>{{ $drafts->where('sync_status','!=','synced')->count() ? $drafts->where('sync_status','!=','synced')->count().' pendientes de sincronizar' : 'Sin borradores pendientes' }}</span>@if(session('mobile.downloaded_at'))<small>Última descarga: {{ session('mobile.downloaded_at') }}</small>@endif @if(session('mobile.synced_at'))<small>Última sincronización: {{ session('mobile.synced_at') }}</small>@endif</div>@endif
 @foreach($errors->all() as $error)<p class="field-error" role="alert">{{ $error }}</p>@endforeach
-@if(!$owner)
-<section class="card" style="padding:24px"><h2>Prepara tus proyectos</h2><p>Abre el sistema e inicia sesión. En el menú selecciona «Descargar mis proyectos» para descargar tus proyectos y crear borradores desde este celular.</p><a class="button" href="{{ route('mobile.start') }}" wire:click.prevent="openSystem"><x-icon name="login"/>Entrar al sistema</a><p class="muted small">Para descargar necesitas acceso al servidor. Los borradores ya guardados se conservan en el dispositivo.</p></section>
-@elseif($editing)
+@if($editing)
 @include('partials.mobile-editor')
 @elseif($page==='summary')
 
@@ -68,4 +76,6 @@
 <div class="section-heading offline-draft-tools"><button class="button" wire:click="newDraft"><x-icon name="plus"/>Nuevo borrador</button><button class="button secondary" wire:click="syncAll" wire:loading.attr="disabled"><x-icon name="save"/>Sincronizar</button></div>
 <div class="offline-scroll-list offline-drafts-list">@forelse($drafts as $draft)<article class="card offline-draft"><header><strong>{{ $draft->receipt['kardex']??'Código al sincronizar' }}</strong><span class="badge {{ $draft->sync_status==='synced'?'finalizado':'borrador' }}">{{ $draft->sync_status==='synced'?'Sincronizado':($draft->sync_status==='syncing'?'Sincronizando':'Guardado en el celular') }}</span></header><p>{{ collect($catalog)->firstWhere('id',$draft->payload['project_id']??null)['name']??'Proyecto' }} · {{ $draft->payload['date']??'' }} · {{ ucfirst($draft->payload['type']??'preventivo') }}</p><small>{{ count($draft->photos) }} fotos guardadas</small>@if($draft->sync_error)<p class="field-error">{{ $draft->sync_error }}</p>@endif<div class="offline-actions">@if($draft->sync_status!=='synced')@if(!$draft->receipt)<button class="button secondary" wire:click="edit('{{ $draft->id }}')"><x-icon name="edit"/>Continuar</button>@endif<button class="button" wire:click="sync('{{ $draft->id }}')" wire:loading.attr="disabled">Sincronizar</button>@elseif(isset($draft->receipt['intervention_id']))<a class="button secondary" href="{{ route('mobile.start',['path'=>'/intervenciones/'.$draft->receipt['intervention_id']]) }}" wire:click.prevent="openSystem('/intervenciones/{{ $draft->receipt['intervention_id'] }}')">Abrir en el sistema</a>@endif</div></article>@empty<div class="card empty">No tienes borradores guardados en este celular.</div>@endforelse</div>
 @endif
-</main></div>
+</main>
+@endif
+</div>

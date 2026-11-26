@@ -46,8 +46,10 @@ class MobileAppTest extends TestCase
             if ($role === 'admin') {
                 $page->assertSee('Administración')->assertDontSee('Borradores del celular')
                     ->assertDontSee('Descarga una copia para crear Kardex sin conexión.');
-            } else {
+            } elseif ($role === 'tecnico') {
                 $page->assertSee('Borradores del celular');
+            } else {
+                $page->assertDontSee('Borradores del celular');
             }
             if ($role !== 'tecnico') {
                 $this->post('/native/offline')->assertForbidden();
@@ -237,7 +239,9 @@ class MobileAppTest extends TestCase
     {
         config(['mobile.enabled' => true]);
         \Illuminate\Support\Facades\Blade::if('mobile', fn () => true);
-        $this->get('/mobile/offline')->assertOk()->assertSee('x-on:mobile-toast.window', false);
+        $this->get('/mobile/offline')->assertOk()->assertSee('x-on:mobile-toast.window', false)
+            ->assertSee('Se necesita conexión a internet')
+            ->assertDontSee('Borradores del celular');
     }
 
 }

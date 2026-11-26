@@ -104,7 +104,7 @@ class ProjectWorkspaceTest extends TestCase
     {
         $this->actingAs($this->account('admin'));
         $p = $this->project();
-        $c = Livewire::test(ProjectWorkspace::class, ['project' => $p])->assertSet('section', 'types')->assertSee('Nuevo tipo')
+        $c = Livewire::test(ProjectWorkspace::class, ['project' => $p])->assertSet('section', 'types')->assertSee('Crear Kardex')
             ->call('open', 'type')->set('form.name', 'Aire')->call('addTemplateActivity', 'preventive')->set('templateActivities.preventive.0.name', 'Limpieza')->call('addTemplateActivity', 'corrective')->set('templateActivities.corrective.0.name', 'Diagnóstico')
             ->call('addField')->set('fields.0.name', 'Capacidad')->set('fields.0.type', 'numero')->set('fields.0.required', true)->call('saveType')->assertHasNoErrors()->assertDontSee('Siguiente:');
         $t = $p->templates()->firstOrFail();
@@ -661,6 +661,7 @@ class ProjectWorkspaceTest extends TestCase
         Livewire::test(ProjectWorkspace::class, ['project' => $project])->call('open', 'type', $template->id)->assertStatus(409);
 
         Livewire::test(ProjectWorkspace::class, ['project' => $project])->call('open', 'type', $template->id)->assertStatus(409);
+        Livewire::test(ProjectWorkspace::class, ['project' => $project])->call('open', 'preview-type', $template->id)->assertOk()->assertSee($template->name);
         $this->assertSame(['Reemplazar soporte'], $template->fresh()->corrective);
     }
     public function test_draft_accepts_missing_required_fields_but_submission_requires_them(): void
