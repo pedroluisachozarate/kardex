@@ -30,7 +30,9 @@ class DashboardTest extends TestCase
             return $p->assets()->create(['template_id' => $template->id, 'equipment_id' => Equipment::create(['name' => 'Equipo'])->id, 'number' => $number, 'technical_data' => []]);
         };
         $this->actingAs($tech)->get(route('projects.index'))->assertOk()->assertSee('Mis proyectos')->assertViewHas('projects', fn ($rows) => $rows->pluck('id')->all() === [$project->id]);
-        $this->actingAs($admin)->get(route('projects.index'))->assertOk()->assertViewHas('projects', fn ($rows) => $rows->count() === 2);
+        $this->actingAs($admin)->get(route('projects.index'))->assertRedirect(route('administration', ['tab' => 'proyectos']));
+        $this->get(route('administration', ['tab' => 'proyectos']))->assertOk()
+            ->assertDontSee('href="'.route('projects.index').'"', false)->assertSee('Otro proyecto');
         $asset = $makeAsset($project, 1);
         $foreignAsset = $makeAsset($foreign, 1);
         foreach ([['2026-10-18', 'revision', $tech], ['2026-10-18', 'finalizado', $tech], ['2026-10-17', 'borrador', $tech], ['2026-10-16', 'observado', $other]] as $index => $row) {

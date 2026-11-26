@@ -191,6 +191,10 @@ class KardexController extends Controller
 
     public function projects(Request $request)
     {
+        if ($request->user()->role === 'admin') {
+            return redirect()->route('administration', ['tab' => 'proyectos']);
+        }
+
         $data = $request->validate(['q' => 'nullable|string|max:120']);
         $search = trim($data['q'] ?? '');
         $query = $this->projectQuery();

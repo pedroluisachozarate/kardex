@@ -42,9 +42,12 @@ class MobileAppTest extends TestCase
         foreach (['admin', 'supervisor', 'tecnico', 'consulta'] as $role) {
             $user = User::factory()->create(['role' => $role, 'active' => true, 'must_change_password' => false]);
             $page = $this->actingAs($user)->withSession(['native_app_state' => $state])->get('/');
-            $page->assertOk()->assertSee('Resumen')->assertSee('Borradores del celular');
+            $page->assertOk()->assertSee('Resumen');
             if ($role === 'admin') {
-                $page->assertSee('Administración');
+                $page->assertSee('Administración')->assertDontSee('Borradores del celular')
+                    ->assertDontSee('Descarga una copia para crear Kardex sin conexión.');
+            } else {
+                $page->assertSee('Borradores del celular');
             }
             if ($role !== 'tecnico') {
                 $this->post('/native/offline')->assertForbidden();
