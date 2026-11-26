@@ -274,7 +274,7 @@ class ProjectWorkspace extends Component
             $this->project()->assets()->findOrFail($id);
         }
         if ($modal === 'members') {
-            $this->members = $this->project()->users()->pluck('users.id')->all();
+            $this->members = $this->project()->users()->where('users.role', '!=', 'admin')->pluck('users.id')->all();
         }
         if ($modal === 'edit') {
             $i = $this->editableIntervention();
@@ -500,22 +500,35 @@ class ProjectWorkspace extends Component
         $this->access(true);
         abort_unless($this->modal === 'type', 403);
         $this->validate([
+            'form.name' => 'required|string|max:200',
+            'form.preventive' => 'nullable|string|max:10000',
+            'form.corrective' => 'nullable|string|max:10000',
+            'fields' => 'array|max:50',
+            'fields.*.name' => 'required|string|max:100|distinct',
+            'fields.*.type' => ['required', Rule::in(['texto', 'numero', 'fecha', 'lista'])],
+            'fields.*.unit' => 'nullable|string|max:50',
+            'fields.*.required' => 'boolean',
+            'fields.*.options' => 'nullable|string|max:1000',
             'templateActivities' => 'required|array:preventive,corrective',
             'templateActivities.*' => 'array|max:100',
             'templateActivities.*.*.name' => ['required', 'string', 'max:255', 'not_regex:/[\r\n|]/'],
             'templateActivities.*.*.legacy' => 'nullable|string|max:5000',
-        ], ['templateActivities.*.*.name.required' => 'Escribe la descripción de cada actividad.']);
-        $this->validate(['form.name' => 'required|string|max:200', 'form.preventive' => 'nullable|string|max:10000', 'form.corrective' => 'nullable|string|max:10000', 'fields' => 'array|max:50', 'fields.*.name' => 'required|string|max:100|distinct', 'fields.*.type' => ['required', Rule::in(['texto', 'numero', 'fecha', 'lista'])], 'fields.*.unit' => 'nullable|string|max:50', 'fields.*.required' => 'boolean', 'fields.*.options' => 'nullable|string|max:1000']);
+        ], [
+            'form.name.required' => 'Escribe el tipo.',
+            'fields.*.name.required' => 'Escribe el campo.',
+            'fields.*.name.distinct' => 'No repitas el campo.',
+            'templateActivities.*.*.name.required' => 'Escribe la actividad.',
+        ]);
         $fields = [];
         foreach ($this->fields as $key => $field) {
             if (Template::identityColumn($field['name'])) {
-                $this->addError('fields.'.$key.'.name', 'Este campo ya existe como campo base.');
+                $this->addError('fields.'.$key.'.name', 'Es un campo base.');
 
                 return;
             }
             $options = array_values(array_filter(array_map('trim', explode(',', $field['options'] ?? ''))));
             if ($field['type'] === 'lista' && ! $options) {
-                $this->addError('fields.'.$key.'.options', 'Escribe al menos una opción.');
+                $this->addError('fields.'.$key.'.options', 'Agrega una opción.');
 
                 return;
             }
@@ -542,7 +555,10 @@ class ProjectWorkspace extends Component
     {
         $this->access(true);
         abort_unless($this->modal === 'members', 403);
-        $this->validate(['members' => 'array', 'members.*' => 'integer|exists:users,id']);
+        $this->validate([
+            'members' => 'array',
+            'members.*' => ['integer', Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', '!=', 'admin'))],
+        ]);
         $this->project()->users()->sync($this->members);
         $this->audit('Personal actualizado');
         $this->done('Personal actualizado.', 'members');
@@ -856,7 +872,7 @@ class ProjectWorkspace extends Component
         $project = $this->project()->load('client', 'templates', 'users');
         abort_unless(count($this->statusFilters) <= 4 && ! array_diff($this->statusFilters, ['borrador', 'observado', 'revision', 'finalizado']), 422);
         $states = array_values(array_unique($this->statusFilters));
-        $assets = $project->assets()->with('equipment', 'project')->orderByDesc('number')
+        $assets = $project->assets()->with('equipment', 'project')->withCount('interventions')->orderByDesc('number')
             ->with(['interventions' => fn ($q) => $q->when(count($states) !== 4, fn ($q) => $q->whereIn('status', $states))
                 ->with(['activities' => fn ($q) => $q->withCount('photos')->with(['photos' => fn ($q) => $q->orderBy('id')->limit(1)])])])
             ->when(count($states) !== 4, fn ($q) => $q->whereHas('interventions', fn ($q) => $q->whereIn('status', $states)))
@@ -870,7 +886,7 @@ class ProjectWorkspace extends Component
             $selectedType = $this->editorTemplate($editingIntervention);
         }
 
-        return view('livewire.project-workspace', ['project' => $project, 'assets' => $assets, 'isAdmin' => $isAdmin, 'canRegister' => auth()->user()->role === 'tecnico', 'equipment' => auth()->user()->role === 'tecnico' ? $this->availableEquipment()->get() : collect(), 'users' => $isAdmin ? User::orderBy('name')->get() : collect(), 'designerType' => in_array($this->modal, ['type', 'preview-type']) && $this->editing ? $project->templates->find($this->editing) : null, 'selectedType' => $selectedType, 'editingIntervention' => $editingIntervention, 'viewedIntervention' => $this->modal === 'view' ? $this->viewedIntervention() : null]);
+        return view('livewire.project-workspace', ['project' => $project, 'assets' => $assets, 'isAdmin' => $isAdmin, 'canRegister' => auth()->user()->role === 'tecnico', 'equipment' => auth()->user()->role === 'tecnico' ? $this->availableEquipment()->get() : collect(), 'users' => $isAdmin ? User::where('role', '!=', 'admin')->orderBy('name')->get() : collect(), 'designerType' => in_array($this->modal, ['type', 'preview-type']) && $this->editing ? $project->templates->find($this->editing) : null, 'selectedType' => $selectedType, 'editingIntervention' => $editingIntervention, 'viewedIntervention' => $this->modal === 'view' ? $this->viewedIntervention() : null]);
     }
 
     private function identityField(string $name): ?string

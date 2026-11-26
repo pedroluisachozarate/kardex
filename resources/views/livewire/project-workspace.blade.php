@@ -1,9 +1,9 @@
 <div class="admin-workspace project-workspace" data-recovery-scope="web-{{ auth()->id() }}-project-{{ $projectId }}" x-data @keydown.escape.window="$wire.closeModal()">
-<header class="page-heading project-compact-heading"><a class="dashboard-back" href="{{ route('projects.index') }}" aria-label="Volver a proyectos" title="Volver a proyectos">←</a><div><p class="eyebrow">{{ $project->client->name }}</p><h1>{{ $project->name }}</h1></div></header>
+<header class="page-heading project-compact-heading"><a class="dashboard-back" href="{{ route('projects.index') }}" aria-label="Volver a proyectos" title="Volver a proyectos"><x-icon name="back"/></a><div><p class="eyebrow">{{ $project->client->name }}</p><h1>{{ $project->name }}</h1></div></header>
 @if($isAdmin)
 <div class="admin-tabs project-admin-tabs" role="tablist" aria-label="Secciones del proyecto">
-@foreach(['types' => 'Tipos de equipo', 'members' => 'Personal'] as $key => $label)
-<button type="button" role="tab" class="admin-tab {{ $section === $key ? 'selected' : '' }}" aria-selected="{{ $section === $key ? 'true' : 'false' }}" wire:click="selectSection('{{ $key }}')">{{ $label }}</button>
+@foreach(['types' => ['Tipos de equipo', 'file'], 'members' => ['Personal', 'users']] as $key => [$label, $icon])
+<button type="button" role="tab" class="admin-tab {{ $section === $key ? 'selected' : '' }}" aria-selected="{{ $section === $key ? 'true' : 'false' }}" wire:click="selectSection('{{ $key }}')"><x-icon :name="$icon"/><span>{{ $label }}</span></button>
 @endforeach
 </div>
 @endif
@@ -53,7 +53,7 @@
 @if($modal)
 <div class="admin-overlay" wire:key="project-modal-{{ $modal }}-{{ $editing }}" x-data="{ galleryOpen: false, uploads: 0 }" x-on:livewire-upload-start="uploads++" x-on:livewire-upload-finish="uploads = Math.max(0, uploads - 1)" x-on:livewire-upload-error="uploads = Math.max(0, uploads - 1)" x-on:livewire-upload-cancel="uploads = Math.max(0, uploads - 1)" @kardex-gallery-state.window="galleryOpen=$event.detail.open" x-trap.inert.noscroll="!galleryOpen" x-init="$nextTick(() => $refs.projectDialog.querySelector('input,select,button')?.focus())"><div class="admin-backdrop"></div>
 <section class="admin-modal {{ in_array($modal,['type','preview-type','asset','edit','view'])?'type-modal':'' }}" role="dialog" aria-modal="true" aria-labelledby="project-modal-title" x-ref="projectDialog">
-<header><h2 id="project-modal-title">{{ ['type'=>$editing?'Diseñar Kardex':'Diseñar Kardex','preview-type'=>$designerType?->name,'asset'=>'Registrar equipo y Kardex','edit'=>'Editar Kardex','view'=>'Consultar Kardex','members'=>'Asignar personal','intervention'=>'Agregar mantenimiento'][$modal] }}</h2><button class="text-button close-drawer" :disabled="uploads > 0" wire:click="closeModal" aria-label="Cerrar formulario"><x-icon name="close"/></button></header>
+<header><h2 id="project-modal-title">{{ ['type'=>$editing?'Diseñar Kardex':'Diseñar Kardex','preview-type'=>$designerType?->name,'asset'=>'Kardex','edit'=>'Editar Kardex','view'=>'Consultar Kardex','members'=>'Asignar personal','intervention'=>'Agregar mantenimiento'][$modal] }}</h2><button class="text-button close-drawer" :disabled="uploads > 0" wire:click="closeModal" aria-label="Cerrar formulario"><x-icon name="close"/></button></header>
 @if($modal==='preview-type')
 <div class="drawer-body project-type-detail">
     <section class="card project-detail-card">
@@ -96,7 +96,7 @@
 @endif
 <div class="drawer-body" wire:key="project-drawer-{{ $modal }}-{{ $editing }}">
 @if($modal==='edit' && $message)<div hidden data-kardex-alert="success">{{ $message }}</div>@endif
-@if($errors->any())<div hidden data-kardex-alert="error">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
+@if($errors->any() && $modal !== 'type')<div hidden data-kardex-alert="error">@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
 @if($modal==='type')
 @include('livewire.kardex-template-sheet')
 @elseif($modal==='members')
@@ -104,7 +104,7 @@
 <div class="personnel-list">
 @foreach($users as $u)<label class="personnel-option" wire:key="member-{{ $u->id }}"><input type="checkbox" wire:model="members" value="{{ $u->id }}"><span class="personnel-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($u->name,0,1)) }}</span><span class="personnel-name">{{ $u->name }}@if(!$u->active)<small>Inactivo</small>@endif</span><span class="personnel-role">{{ ['admin'=>'Administrador','supervisor'=>'Supervisor','tecnico'=>'Técnico','consulta'=>'Consulta'][$u->role] ?? ucfirst($u->role) }}</span></label>@endforeach
 </div>
-<p class="muted small">El administrador ya tiene acceso a todos los proyectos.</p>
+<p class="muted small">El administrador gestiona el sistema y no se asigna a proyectos.</p>
 @elseif(in_array($modal,['asset','edit']))
 @include('livewire.kardex-registration-sheet')
 @elseif($modal==='intervention')
@@ -113,7 +113,8 @@
 </div>
 @php($ready = in_array($modal,['asset','edit']) && $this->readyForReview())
 @php($resending = $editingIntervention?->status === 'observado')
-<footer><button type="button" class="button secondary footer-cancel" :disabled="uploads > 0" wire:click="closeModal" aria-label="Cancelar" title="Cancelar"><x-icon name="close"/><span class="footer-icon-label">Cancelar</span></button><div class="editor-footer-actions">
+@php($footerActionCount = 2 + (int) (bool) $editingIntervention + (int) $ready)
+<footer @class(['two-button-actions' => $footerActionCount === 2, 'three-button-actions' => $footerActionCount === 3])><button type="button" class="button secondary footer-cancel" :disabled="uploads > 0" wire:click="closeModal" aria-label="Cancelar" title="Cancelar"><x-icon name="close"/><span class="footer-icon-label">Cancelar</span></button><div class="editor-footer-actions">
 @if($editingIntervention)<a class="button secondary compact footer-pdf" target="_blank" :aria-disabled="uploads > 0" :tabindex="uploads > 0 ? -1 : null" @click="if (uploads > 0) $event.preventDefault()" href="{{ route('interventions.print', $editingIntervention) }}" aria-label="PDF" title="PDF"><x-icon name="file"/><span class="footer-icon-label">PDF</span></a>@endif
 @if($ready)<button type="button" class="button secondary" title="{{ $resending ? 'Reenviar a revisión' : 'Enviar a revisión' }}" aria-label="{{ $resending ? 'Reenviar a revisión' : 'Enviar a revisión' }}" wire:click="sendCurrentMaintenance" :disabled="uploads > 0" wire:loading.attr="disabled" wire:target="saveCurrentMaintenance,sendCurrentMaintenance,saveType,saveMembers,createIntervention"><x-icon name="send"/>{{ $resending ? 'Reenviar' : 'Enviar' }}</button>@endif
 <button type="submit" class="button" title="{{ in_array($modal,['asset','edit']) ? ($resending ? 'Guardar correcciones' : 'Guardar borrador') : 'Guardar' }}" aria-label="{{ in_array($modal,['asset','edit']) ? ($resending ? 'Guardar correcciones' : 'Guardar borrador') : 'Guardar' }}" :disabled="uploads > 0" wire:loading.attr="disabled" wire:target="saveCurrentMaintenance,sendCurrentMaintenance,saveType,saveMembers,createIntervention"><x-icon name="save"/><span wire:loading.remove wire:target="saveCurrentMaintenance,sendCurrentMaintenance,saveType,saveMembers,createIntervention">{{ in_array($modal,['asset','edit']) ? 'Guardar' : ($modal==='intervention'?'Agregar mantenimiento':'Guardar') }}</span><span wire:loading wire:target="saveCurrentMaintenance,sendCurrentMaintenance,saveType,saveMembers,createIntervention">Guardando…</span></button>

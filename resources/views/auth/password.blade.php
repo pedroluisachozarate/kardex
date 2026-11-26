@@ -1,7 +1,7 @@
 @extends('layout')
 @section('title','Contraseña')
 @section('content')
-<div class="page-heading"><div><p class="eyebrow">MI CUENTA</p><h1>Actualizar contraseña</h1><p class="muted">Usa al menos 10 caracteres, letras y números.</p></div></div>
+<div class="page-heading password-page-heading"><div><p class="eyebrow">MI CUENTA</p><h1>Actualizar contraseña</h1><p class="muted">Usa al menos 10 caracteres, letras y números.</p></div></div>
 <form class="card narrow password-update-form" method="POST" action="{{ route('password.update') }}" data-password-validation novalidate>
 @csrf
 @if(session('password_updated'))<div hidden data-kardex-alert="success">{{ session('password_updated') }}</div>@endif

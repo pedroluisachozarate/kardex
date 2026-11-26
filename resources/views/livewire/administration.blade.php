@@ -52,7 +52,7 @@
                         <div class="form-tip">Mínimo 10 caracteres. Cambio obligatorio al ingresar. {{ $editing?'Vacío: conservar contraseña.':'' }}</div>
                     @endif
                     </div>
-                    <footer><button type="button" class="button secondary" wire:click="closeForm" wire:loading.attr="disabled"><x-icon name="close"/>Cancelar</button><button type="submit" class="button" wire:loading.attr="disabled"><x-icon name="save"/><span wire:loading.remove wire:target="save">{{ $editing?'Guardar cambios':'Crear '.$singular[$formType] }}</span><span wire:loading wire:target="save">Procesando…</span></button></footer>
+                    <footer class="two-button-actions"><button type="button" class="button secondary" wire:click="closeForm" wire:loading.attr="disabled"><x-icon name="close"/>Cancelar</button><button type="submit" class="button" wire:loading.attr="disabled"><x-icon name="save"/><span wire:loading.remove wire:target="save">{{ $editing?'Guardar cambios':'Crear '.$singular[$formType] }}</span><span wire:loading wire:target="save">Procesando…</span></button></footer>
                 </form>
             </section>
         </div>

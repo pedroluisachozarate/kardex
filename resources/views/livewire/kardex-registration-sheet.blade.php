@@ -1,11 +1,4 @@
 <div class="kardex-editor compact-registration">
-    @unless($editingIntervention)
-    <div class="sheet-tools">
-        <label>Tipo de equipo <span class="required-mark" aria-label="obligatorio">*</span><select :disabled="uploads > 0 || {{ $editingIntervention ? 'true' : 'false' }}" wire:model.live="form.template_id"><option value="">Seleccionar</option>@foreach($project->templates as $t)<option value="{{ $t->id }}">{{ $t->name }}</option>@endforeach</select></label>
-        <label>Mantenimiento <span class="required-mark" aria-label="obligatorio">*</span><select :disabled="uploads > 0 || {{ $editingIntervention ? 'true' : 'false' }}" wire:model.live="form.type"><option value="preventivo">Preventivo</option><option value="correctivo">Correctivo</option></select></label>
-        @unless($editingIntervention)<span class="muted small">Completa la hoja y guarda el borrador para continuar después.</span>@endunless
-    </div>
-    @endunless
     @if($editingIntervention?->status === 'observado' && $editingIntervention->review_note)<div class="review-feedback"><strong>Correcciones solicitadas</strong><p>{{ $editingIntervention->review_note }}</p></div>@endif
     <article class="kardex-sheet" aria-label="Registro completo del Kardex">
         <div class="sheet-heading">
@@ -14,7 +7,7 @@
                 <div class="sheet-record-line"><strong>{{ $editingIntervention->asset->kardex_code }}</strong><span class="badge {{ $editingIntervention->status }}">{{ $editingIntervention->status_label }}</span></div>
                 <small class="sheet-reference">{{ $selectedType?->name }} · {{ ucfirst($form['type'] ?? 'preventivo') }} <span class="sheet-record-number">/ {{ sprintf('%03d', $editingIntervention->number) }}</span></small>
                 @else
-                <strong>Kardex de mantenimiento</strong><small class="sheet-reference">N.º automático · Borrador</small>
+                <small class="sheet-reference">N.º automático · Borrador</small>
                 @endif
             </div>
             <label>Fecha <span class="required-mark" aria-label="obligatorio">*</span><input type="date" wire:model.live="form.date"></label>
@@ -22,6 +15,13 @@
         <h3 class="sheet-project-title">Datos del proyecto</h3>
         <div class="sheet-project"><div><b>Entidad:</b> {{ $project->client->name }}</div><div><b>Proyecto:</b> {{ $project->name }}</div></div>
         <h3>Ficha técnica del equipo</h3>
+        @unless($editingIntervention)
+        <div class="sheet-tools">
+            <label>Tipo de equipo <span class="required-mark" aria-label="obligatorio">*</span><select :disabled="uploads > 0 || {{ $editingIntervention ? 'true' : 'false' }}" wire:model.live="form.template_id"><option value="">Seleccionar</option>@foreach($project->templates as $t)<option value="{{ $t->id }}">{{ $t->name }}</option>@endforeach</select></label>
+            <label>Mantenimiento <span class="required-mark" aria-label="obligatorio">*</span><select :disabled="uploads > 0 || {{ $editingIntervention ? 'true' : 'false' }}" wire:model.live="form.type"><option value="preventivo">Preventivo</option><option value="correctivo">Correctivo</option></select></label>
+            @unless($editingIntervention)<span class="muted small">Completa la hoja y guarda el borrador para continuar después.</span>@endunless
+        </div>
+        @endunless
         @if($selectedType)
         <div class="grid two sheet-inputs technical-inputs" wire:key="technical-{{ $selectedType->id }}">@foreach(collect($selectedType->fields)->sortBy(fn ($field, $index) => ($column = \App\Models\Template::identityColumn($field['name'])) ? array_search($column, ['name','brand','model','serial','code']) : 5 + $index) as $key=>$field)<label>{{ \Illuminate\Support\Str::ucfirst(mb_strtolower($field['name'])) }} {{ $field['unit']?'('.$field['unit'].')':'' }}@if($field['required']) <span class="required-mark" aria-label="obligatorio">*</span>@endif@if($field['type']==='lista')<select wire:model.live.debounce.1000ms="technical.{{ $key }}"><option value="">Seleccionar</option>@foreach($field['options'] as $option)<option>{{ $option }}</option>@endforeach</select>@else<input type="{{ ['texto'=>'text','numero'=>'number','fecha'=>'date'][$field['type']] }}" step="any" wire:model.live.debounce.1000ms="technical.{{ $key }}">@endif</label>@endforeach<label>Ubicación (opcional)<input wire:model="form.location_text" placeholder="Sede, piso u oficina" maxlength="500"></label></div>
         @else<p class="sheet-project muted">Selecciona el tipo de equipo para cargar sus campos y actividades.</p>@endif

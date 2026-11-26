@@ -6,7 +6,13 @@
         if(window.kardexExperience?.notice)window.kardexExperience.notice(detail.message,detail);
         else (window.kardexPendingNotices ||= []).push(detail);
     };
+    const offlineNotice = () => notify({message:'Sin conexión. Conservamos los datos en pantalla.'});
+    const isConnectionFailure = options => navigator.onLine === false || /sin conexión|perdió la conexión|failed to fetch|network error/i.test(options.text || '');
     const dialog = options => {
+        if(options.icon==='error' && isConnectionFailure(options)) {
+            offlineNotice();
+            return Promise.resolve({isConfirmed:false});
+        }
         if(options.icon==='success') {
             notify({message:options.text || options.title || 'Cambios guardados.',duration:1500});
             return Promise.resolve({isConfirmed:false});
@@ -67,6 +73,10 @@
         Livewire.hook('request', ({fail}) => {
             fail(({status, preventDefault}) => {
                 preventDefault();
+                if (status !== 419 && (status === 0 || status == null || !navigator.onLine)) {
+                    offlineNotice();
+                    return;
+                }
                 dialog({icon:'error', title:status === 419 ? 'La sesión venció' : 'No se pudo completar la acción',
                     text:status === 419 ? 'Recarga la página e inicia sesión nuevamente.' : 'Comprueba tu conexión e intenta nuevamente.'});
             });

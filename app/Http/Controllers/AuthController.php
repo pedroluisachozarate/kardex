@@ -54,6 +54,6 @@ class AuthController extends Controller
         $r->user()->update(['password' => $data['password'], 'must_change_password' => false]);
         $r->session()->regenerate();
 
-        return redirect()->route('password.edit')->with('password_updated', 'Contraseña actualizada correctamente.');
+        return redirect()->route('dashboard');
     }
 }

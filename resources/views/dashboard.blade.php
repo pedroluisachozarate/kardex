@@ -2,7 +2,7 @@
 @section('title','Resumen')
 @section('content')
 <div class="dashboard-workspace {{ $section==='maintenance'?'maintenance-workspace':'' }}">
-<header class="page-heading dashboard-heading">@if($section!=='overview')<a class="dashboard-back" href="{{ $backUrl }}" aria-label="{{ $backLabel }}" title="{{ $backLabel }}">←</a>@endif<h1>{{ ['overview'=>'Resumen','projects'=>'Proyectos del período','maintenance'=>'Mantenimientos del período'][$section] }}</h1><span class="date-label">{{ now()->timezone('America/La_Paz')->format('d/m/Y') }}</span></header>
+<header class="page-heading dashboard-heading">@if($section!=='overview')<a class="dashboard-back" href="{{ $backUrl }}" aria-label="{{ $backLabel }}" title="{{ $backLabel }}"><x-icon name="back"/></a>@endif<h1>{{ ['overview'=>'Resumen','projects'=>'Proyectos del período','maintenance'=>'Mantenimientos del período'][$section] }}</h1><span class="date-label">{{ now()->timezone('America/La_Paz')->format('d/m/Y') }}</span></header>
 
 
 <form method="GET" action="{{ route('dashboard') }}" class="card dashboard-filters">
