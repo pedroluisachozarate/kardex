@@ -46,10 +46,6 @@ class Administration extends Component
 
 
 
-    public string $clientFilter = '';
-
-
-
     #[Locked]
 
     public bool $showForm = false;
@@ -156,7 +152,7 @@ class Administration extends Component
 
         $this->tab = $tab;
 
-        $this->search = $this->clientFilter = '';
+        $this->search = '';
 
         $this->resetPage();
 
@@ -167,16 +163,6 @@ class Administration extends Component
 
 
     public function updatedSearch(): void
-
-    {
-
-        $this->resetPage();
-
-    }
-
-
-
-    public function updatedClientFilter(): void
 
     {
 
@@ -206,7 +192,7 @@ class Administration extends Component
 
         $this->editing = $id;
 
-        $this->form = ['name' => '', 'contact' => '', 'client_id' => $this->clientFilter, 'building' => '', 'floor' => '', 'area' => '', 'email' => '', 'phone' => '', 'role' => 'tecnico', 'active' => true, 'password' => ''];
+        $this->form = ['name' => '', 'contact' => '', 'client_id' => '', 'building' => '', 'floor' => '', 'area' => '', 'email' => '', 'phone' => '', 'role' => 'tecnico', 'active' => true, 'password' => ''];
 
         if ($id) {
 
@@ -391,12 +377,6 @@ class Administration extends Component
                 }
 
             });
-
-        }
-
-        if ($this->clientFilter !== '' && in_array($this->tab, ['proyectos'])) {
-
-            $q->where('client_id', $this->clientFilter);
 
         }
 

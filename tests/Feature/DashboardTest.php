@@ -61,13 +61,18 @@ class DashboardTest extends TestCase
         $projectsAgain = $this->get($maintenancePage->viewData('backUrl'))->assertOk()->assertViewHas('section', 'projects')
             ->assertViewHas('backUrl', route('dashboard', $original));
         $this->get($projectsAgain->viewData('backUrl'))->assertOk()->assertViewHas('section', 'overview')->assertViewHas('totalCount', 3);
-        $this->get('/?from=2026-10-16&to=2026-10-16')->assertSessionHasErrors('from');
+        $this->get('/?from=2026-10-16&to=2026-10-16')->assertOk()->assertViewHas('totalCount', 0);
         $this->get('/?project_id='.$foreign->id)->assertSessionHasErrors('project_id');
         $this->actingAs($supervisor)->get('/?from=2026-10-16&to=2026-10-18')->assertOk()->assertViewHas('totalCount', 4);
         $this->get('/?technician_id='.$other->id.'&from=2026-10-16&to=2026-10-16')->assertOk()->assertViewHas('totalCount', 1);
         $this->get('/?technician_id='.$admin->id)->assertForbidden();
         $this->actingAs($admin)->get('/')->assertOk()->assertViewHas('equipmentCount', 2)->assertViewHas('totalCount', 3);
         $this->get('/?project_id='.$foreign->id)->assertOk()->assertViewHas('summary', fn ($rows) => $rows->count() === 1);
+        $gestora = Client::create(['name' => 'Gestora']);
+        Project::create(['name' => 'Proyecto Gestora', 'description' => 'Servicio', 'client_id' => $gestora->id]);
+        $this->get(route('dashboard', [...$original, 'view' => 'maintenance', 'client_id' => $gestora->id]))
+            ->assertOk()->assertSee('No hay mantenimientos para estos filtros.')
+            ->assertViewHas('from', $original['from'])->assertViewHas('to', $original['to']);
         $this->get('/?from=2026-10-18&to=2026-10-17')->assertSessionHasErrors('to');
         $this->travelTo(now()->setDate(2026, 10, 20));
         $this->get('/')->assertOk()->assertSee('Hoy no hay mantenimientos registrados.')->assertViewHas('equipmentCount',0);

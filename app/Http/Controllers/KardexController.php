@@ -118,11 +118,6 @@ class KardexController extends Controller
         if ($to < $from) {
             throw ValidationException::withMessages(['to' => 'La fecha final debe ser igual o posterior a la inicial.']);
         }
-        foreach ([$from, $to] as $date) {
-            if ($date !== $today && ! $availableDates->contains($date)) {
-                throw ValidationException::withMessages(['from' => 'Selecciona un día con Kardex para estos filtros.']);
-            }
-        }
         $period = (clone $base)->whereDate('date', '>=', $from)->whereDate('date', '<=', $to);
         $counts = (clone $period)->selectRaw('status, COUNT(*) AS amount')->groupBy('status')->pluck('amount', 'status');
         $totalCount = (int) $counts->sum();

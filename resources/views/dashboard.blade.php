@@ -9,15 +9,30 @@
 @if(isset($filters['parent']))<input type="hidden" name="parent" value="{{ $filters['parent'] }}">@endif
 @if($section!=='overview')<input type="hidden" name="view" value="{{ $section }}">@foreach($overviewFilters as $key=>$value)<input type="hidden" name="overview[{{ $key }}]" value="{{ $value }}">@endforeach @endif
 @if(request('state'))<input type="hidden" name="state" value="{{ request('state') }}">@endif
+<div class="dashboard-date-range">
 @foreach(['from'=>'Desde','to'=>'Hasta'] as $key=>$label)
 <div class="dashboard-date" x-data="kardexCalendar(@js($$key), @js($availableDates))" @click.outside="open=false" @keydown.escape.window="open=false">
-<label>{{ $label }}</label><input type="hidden" name="{{ $key }}" :value="value"><button type="button" class="calendar-trigger button secondary" @click="open=!open" :aria-expanded="open" aria-label="Seleccionar fecha {{ strtolower($label) }}"><x-icon name="calendar"/><span x-text="formatted"></span></button>
-<div class="calendar-panel" x-show="open" x-cloak><div class="calendar-heading"><button type="button" class="button secondary compact" @click="move(-1)" aria-label="Mes anterior">‹</button><strong x-text="monthLabel"></strong><button type="button" class="button secondary compact" @click="move(1)" aria-label="Mes siguiente">›</button></div><div class="calendar-days"><template x-for="name in ['L','M','X','J','V','S','D']"><span x-text="name"></span></template><template x-for="(day,index) in days" :key="index"><button type="button" :disabled="!day || !available.includes(day.key)" :class="{'selected':day && value===day.key}" @click="value=day.key;open=false" x-text="day ? day.number : ''" :aria-label="day ? day.key : 'Sin día'"></button></template></div><small>Solo se pueden elegir días con Kardex.</small></div>
+<label>{{ $label }}</label><input type="hidden" name="{{ $key }}" value="{{ $$key }}" :value="value"><button type="button" class="calendar-trigger button secondary" @click="open=!open" :aria-expanded="open" aria-label="Seleccionar fecha {{ strtolower($label) }}"><x-icon name="calendar"/><span x-text="formatted"></span></button>
+<div class="calendar-panel" x-show="open" x-cloak><div class="calendar-heading"><button type="button" class="button secondary compact" @click="move(-1)" aria-label="Mes anterior">‹</button><strong x-text="monthLabel"></strong><button type="button" class="button secondary compact" @click="move(1)" aria-label="Mes siguiente">›</button></div><div class="calendar-days"><template x-for="name in ['L','M','X','J','V','S','D']"><span x-text="name"></span></template><template x-for="(day,index) in days" :key="index"><button type="button" :disabled="!day || !available.includes(day.key)" :class="{'selected':day && value===day.key}" @click="
+    value = day.key;
+    open = false;
+    const form = $el.closest('form');
+    $nextTick(() => {
+        if (form.elements.from.value > form.elements.to.value) {
+            form.elements.{{ $key === 'from' ? 'to' : 'from' }}.value = value;
+        }
+        form.requestSubmit();
+    });
+" x-text="day ? day.number : ''" :aria-label="day ? day.key : 'Sin día'"></button></template></div><small>Solo se pueden elegir días con Kardex.</small></div>
 </div>
 @endforeach
-@if($role==='admin')<label>Entidad<select onchange="this.form.querySelectorAll('input[name=from],input[name=to]').forEach(input => input.disabled=true);this.form.requestSubmit()" name="client_id"><option value="">Todas las entidades</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected(request('client_id')==$client->id)>{{ $client->name }}</option>@endforeach</select></label>@endif
-<div class="dashboard-project-controls"><label>Proyecto<select onchange="this.form.querySelectorAll('input[name=from],input[name=to]').forEach(input => input.disabled=true);this.form.requestSubmit()" name="project_id"><option value="">Todos los proyectos</option>@foreach($projects as $project)<option value="{{ $project->id }}" @selected(request('project_id')==$project->id)>{{ $project->name }}</option>@endforeach</select></label><div class="dashboard-filter-actions"><button class="button" type="submit">Aplicar</button><a class="button secondary" href="{{ route('dashboard') }}">Hoy</a></div></div>
-@if($role!=='tecnico')<label>Técnico<select onchange="this.form.querySelectorAll('input[name=from],input[name=to]').forEach(input => input.disabled=true);this.form.requestSubmit()" name="technician_id"><option value="">Todos los técnicos</option>@foreach($technicians as $technician)<option value="{{ $technician->id }}" @selected(request('technician_id')==$technician->id)>{{ $technician->name }}</option>@endforeach</select></label>@endif
+<div class="dashboard-filter-actions"><a class="button secondary" href="{{ route('dashboard', [...$filters, 'from' => $today, 'to' => $today, 'view' => $section === 'overview' ? null : $section, 'state' => request('state')]) }}">Hoy</a></div>
+</div>
+<div class="dashboard-select-filters">
+@if($role==='admin')<label>Entidad<select onchange="this.form.requestSubmit()" name="client_id"><option value="">Todas las entidades</option>@foreach($clients as $client)<option value="{{ $client->id }}" @selected(request('client_id')==$client->id)>{{ $client->name }}</option>@endforeach</select></label>@endif
+<label>Proyecto<select onchange="this.form.requestSubmit()" name="project_id"><option value="">Todos los proyectos</option>@foreach($projects as $project)<option value="{{ $project->id }}" @selected(request('project_id')==$project->id)>{{ $project->name }}</option>@endforeach</select></label>
+@if($role!=='tecnico')<label class="dashboard-technician-filter">Técnico<select onchange="this.form.requestSubmit()" name="technician_id"><option value="">Todos los técnicos</option>@foreach($technicians as $technician)<option value="{{ $technician->id }}" @selected(request('technician_id')==$technician->id)>{{ $technician->name }}</option>@endforeach</select></label>@endif
+</div>
 
 <p class="muted small dashboard-filter-note">{{ $role==='tecnico' ? 'Tus mantenimientos' : ($role==='admin' ? 'Todos los proyectos' : 'Tus proyectos asignados') }} · Según la fecha del mantenimiento. Al cambiar los filtros se actualizan los días disponibles.</p>
 </form>
@@ -32,7 +47,7 @@
 @endif
 @if($section!=='maintenance')
 <section class="dashboard-list-section" aria-labelledby="dashboard-projects-heading">
-<div class="section-heading"><h2 id="dashboard-projects-heading">{{ $section==='overview'?'Proyectos del período':'Todos los proyectos del período' }}</h2>@if($role==='admin')<a class="button secondary compact" href="{{ route('administration',['tab'=>'proyectos']) }}"><x-icon name="plus"/>Crear proyecto</a>@endif@if($section==='overview' && $projectCount>0)<a class="link" href="{{ route('dashboard',[...$filters,'view'=>'projects']) }}">Ver todos ({{ $projectCount }}) →</a>@endif</div>
+<div class="section-heading"><h2 id="dashboard-projects-heading">{{ $section==='overview'?'Proyectos del período':'Todos los proyectos del período' }}</h2>@if($section==='overview' && $projectCount>0)<a class="link" href="{{ route('dashboard',[...$filters,'view'=>'projects']) }}">Ver todos ({{ $projectCount }}) →</a>@endif</div>
 <div class="card dashboard-list">
 @forelse($summary as $row)
 <a class="dashboard-project-row {{ $section==='projects' ? 'dashboard-project-breakdown' : '' }}" href="{{ route('dashboard',[...$filters,'view'=>'maintenance','project_id'=>$row['project']->id,'parent'=>route('dashboard',request()->query(),false)]) }}">
