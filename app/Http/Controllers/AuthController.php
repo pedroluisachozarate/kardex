@@ -5,15 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
     public function login(Request $r)
     {
-        $data = $r->validate(['email' => 'required|email', 'password' => 'required|string']);
-        if (! Auth::attempt([...$data, 'active' => true], remember: true)) {
-            return back()->withErrors(['email' => 'Credenciales incorrectas o cuenta inactiva.'])->onlyInput('email');
+        $validator = Validator::make($r->only('email', 'password'), ['email' => 'required|email', 'password' => 'required|string']);
+        if ($validator->fails() || ! Auth::attempt([...$validator->validated(), 'active' => true], remember: true)) {
+            return back()->withErrors(['login' => 'Los datos de acceso no son correctos.'])->onlyInput('email');
         }
         $r->session()->regenerate();
 

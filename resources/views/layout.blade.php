@@ -4,7 +4,7 @@ $cssManifest = json_decode(@file_get_contents(public_path('css/kardex.bundle.man
 $useCssBundle = is_file(public_path('css/kardex.bundle.min.css')) && $cssManifest === [hash_file('sha256',public_path('css/kardex.css')),hash_file('sha256',public_path('css/kardex-theme.css'))];
 @endphp
 @if($useCssBundle)<link rel="stylesheet" href="{{ asset('css/kardex.bundle.min.css') }}?v={{ filemtime(public_path('css/kardex.bundle.min.css')) }}">@else<link rel="stylesheet" href="{{ asset('css/kardex.css') }}?v={{ filemtime(public_path('css/kardex.css')) }}">@endif
-<script src="{{ asset('js/kardex.js') }}?v={{ filemtime(public_path('js/kardex.js')) }}" defer></script><script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}" defer></script><script src="{{ asset('js/kardex-alerts.js') }}?v={{ filemtime(public_path('js/kardex-alerts.js')) }}" defer></script>@unless($useCssBundle)<link rel="stylesheet" href="{{ asset('css/kardex-theme.css') }}?v={{ filemtime(public_path('css/kardex-theme.css')) }}">@endunless@livewireStyles
+<script src="{{ asset('js/kardex.js') }}?v={{ filemtime(public_path('js/kardex.js')) }}" defer></script>@unless(request()->routeIs('login'))<script src="{{ asset('vendor/sweetalert2/sweetalert2.all.min.js') }}" defer></script><script src="{{ asset('js/kardex-alerts.js') }}?v={{ filemtime(public_path('js/kardex-alerts.js')) }}" defer></script>@endunless@unless($useCssBundle)<link rel="stylesheet" href="{{ asset('css/kardex-theme.css') }}?v={{ filemtime(public_path('css/kardex-theme.css')) }}">@endunless@livewireStyles
 @if(session('native_app_state') || (config('mobile.desktop_origin') && auth()->check() && auth()->user()->role==='tecnico'))<link rel="stylesheet" href="{{ asset('css/native-shell.css') }}?v={{ filemtime(public_path('css/native-shell.css')) }}">@endif
 
 <link rel="stylesheet" href="{{ asset('css/kardex-editor.css') }}?v={{ hash_file('sha256', public_path('css/kardex-editor.css')) }}"><script src="{{ asset('js/dashboard-calendar.js') }}?v={{ filemtime(public_path('js/dashboard-calendar.js')) }}"></script></head>
@@ -16,7 +16,7 @@ $useCssBundle = is_file(public_path('css/kardex.bundle.min.css')) && $cssManifes
 @endauth
 <main class="{{ auth()->check()?'main':'guest' }}">
 @if(session('success'))<div hidden data-kardex-alert="success">{{ session('success') }}</div>@endif
-@if($errors->any() && !request()->routeIs('password.edit'))<div hidden data-kardex-alert="error"><strong>Revisa los siguientes datos:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+@if($errors->any() && !request()->routeIs('login', 'password.edit'))<div hidden data-kardex-alert="error"><strong>Revisa los siguientes datos:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 @yield('content')
 
 </main>

@@ -38,7 +38,39 @@ class PersistentLoginTest extends TestCase
         $user = User::factory()->create(['active' => false]);
         $name = Auth::guard()->getRecallerName();
         $this->post('/login', ['email' => $user->email, 'password' => 'password'])
-            ->assertSessionHasErrors('email')->assertCookieMissing($name);
+            ->assertSessionHasErrors(['login' => 'Los datos de acceso no son correctos.'])->assertCookieMissing($name);
         $this->assertGuest();
+    }
+
+    public function test_login_failures_show_the_same_inline_message(): void
+    {
+        $user = User::factory()->create(['active' => true]);
+
+        foreach ([$user->email, 'desconocido@example.com', 'correo-invalido'] as $email) {
+            $this->from('/login')->post('/login', ['email' => $email, 'password' => 'incorrecta'])
+                ->assertRedirect('/login')
+                ->assertSessionHasErrors(['login' => 'Los datos de acceso no son correctos.']);
+
+            $this->get('/login')->assertOk()
+                ->assertSee('Los datos de acceso no son correctos.')
+                ->assertDontSee('data-kardex-alert="error"', false)
+                ->assertDontSee('sweetalert2.all.min.js')
+                ->assertDontSee('kardex-alerts.js');
+        }
+    }
+
+    public function test_login_limit_returns_to_the_form_with_an_inline_message(): void
+    {
+        $credentials = ['email' => 'desconocido@example.com', 'password' => 'incorrecta'];
+
+        for ($attempt = 0; $attempt < 6; $attempt++) {
+            $this->from('/login')->post('/login', $credentials)
+                ->assertSessionHasErrors(['login' => 'Los datos de acceso no son correctos.']);
+        }
+
+        $this->post('/login', $credentials)->assertRedirect('/login');
+        $this->get('/login')->assertOk()
+            ->assertSee('Demasiados intentos. Espera un minuto y vuelve a intentar.');
+        $this->postJson('/login', $credentials)->assertTooManyRequests();
     }
 }

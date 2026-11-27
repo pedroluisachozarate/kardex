@@ -437,6 +437,7 @@ media(max-width:760px){.activity-thumbnails{grid-template-columns:repeat(3,minma
 .page-heading.password-page-heading{margin-block:0 12px}
 .password-page-heading h1{margin-block:0}
 .password-page-heading .muted{margin-block:4px 0}
+.login-card .login-error{margin:0 0 10px;color:#b91c1c;font-size:13px}
 
 :root{
     --control-border:#cbd5e1;

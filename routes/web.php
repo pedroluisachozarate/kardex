@@ -17,7 +17,7 @@ Route::get('/mobile/handoff', [MobileAppController::class, 'receive']);
 Route::get('/native/entry', [MobileAppController::class, 'entry']);
 Route::middleware('guest')->group(function () {
     Route::view('/login', 'auth.login')->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1')->name('login.store');
 });
 Route::middleware(['auth', EnsureAccountReady::class])->group(function () {
     Route::post('/desktop/offline', [MobileAppController::class, 'desktopPrepare'])->name('desktop.offline');
